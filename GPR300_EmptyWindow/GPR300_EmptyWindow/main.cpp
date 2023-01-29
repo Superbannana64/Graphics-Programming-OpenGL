@@ -9,20 +9,18 @@ void resizeFrameBufferCallback(GLFWwindow* window, int width, int height);
 //TODO: Vertex shader source code
 //Where transformations are preformed later
 const char* vertexShaderSource =
-"#version 450												\n"
-"layout (location = 0) in vec3 vPos;						\n"
-"layout (location = 1) in vec4 vColor;						\n"
-"out vec4 Color;											\n"
-"uniform float _Time;										\n"
-"uniform int _MoveType;                                     \n"
-"void main(){												\n"
-"   float time = 0;                                         \n"
-"   int moveType = _MoveType;                               \n"
-"   if(moveType == 1){time = cos(_Time);}                   \n"
-"   else {time = abs(sin(_Time));}                          \n"
-"	Color = vColor;											\n"
-"	gl_Position = vec4(vPos.x, vPos.y+time, vPos.z,1.0);    \n"
-"}															\0";
+"#version 450																		\n"
+"layout (location = 0) in vec3 vPos;												\n"
+"layout (location = 1) in vec4 vColor;												\n"
+"layout (location = 2) in int  vPosMove;											\n"
+"out vec4 Color;																	\n"
+"uniform float _Time;																\n"
+"void main(){																		\n"
+"   float time = abs(sin(_Time));;													\n"
+"	Color = vColor;																	\n"
+"	if(vPosMove == 0){gl_Position = vec4(vPos.x+time, vPos.y, vPos.z,1.0);}			\n"
+"	else{gl_Position = vec4(vPos.x, vPos.y+time, vPos.z,1.0);}						\n"
+"}																					\0";
 
 //TODO: Fragment shader source code
 const char* fragmentShaderSource = 
@@ -37,16 +35,16 @@ const char* fragmentShaderSource =
 
 //TODO: Vertex data array
 const float vertexData[] = { 
-	//x		y		z		//Colors (RGBA)
+	//x		y		z		//Colors (RGBA)			//Movement
 	//Triangle 1
-	-0.75,	-0.75,	+0.0,	1.0, 0.0, 0.0, 1.0,	//Bottom Left
-	+0.0,	-0.75,	+0.0,	0.0, 1.0, 0.0, 1.0,	//Bottom Right
-	+0.0,	+0.0,	+0.0,	0.0, 0.0, 1.0, 1.0,	//Top Center
+	-0.75,	-0.75,	+0.0,	1.0, 0.0, 0.0, 1.0,		1,	//Bottom Left
+	+0.0,	-0.75,	+0.0,	0.0, 1.0, 0.0, 1.0,		1,	//Bottom Right
+	+0.0,	+0.0,	+0.0,	0.0, 0.0, 1.0, 1.0,		1,	//Top Center
 
 	//Triangle 2
-	+0.0,	-0.75,	+0.0,	0.0, 1.0, 0.0, 1.0,	//Bottom Left
-	+0.75,	-0.75,	+0.0,	1.0, 0.0, 0.0, 1.0,	//Bottom Right
-	+0.0,	+0.0,	+0.0,	0.0, 0.0, 1.0, 1.0,	//Top Center
+	+0.0,	-0.75,	+0.0,	0.0, 1.0, 0.0, 1.0,		0,	//Bottom Left
+	+0.75,	-0.75,	+0.0,	1.0, 0.0, 0.0, 1.0,		0,	//Bottom Right
+	+0.0,	+0.0,	+0.0,	0.0, 0.0, 1.0, 1.0,		0,	//Top Center
 };
 
 int main() {
@@ -143,7 +141,7 @@ int main() {
 	
 	//Position
 	//Define hpw vertex data should be interpreted by vertex shader.
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (const void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (const void*)0);
 	//first 0 is for vertex data id (which is 0 bc we have 1 data set), 3 is for vec size (hense vec3)
 	
 	//Enable this vertext attribute (this is required)
@@ -151,8 +149,12 @@ int main() {
 	//number is the data id like above's
 
 	//Color
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, (const void*)(sizeof(float)*3));
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (const void*)(sizeof(float)*3));
 	glEnableVertexAttribArray(1);
+
+	//Movement
+	glVertexAttribPointer(2, 1, GL_INT, GL_FALSE, sizeof(float) * 8, (const void*)(sizeof(float) * 7));
+	glEnableVertexAttribArray(2);
 
 	//the first 0 could be automated if you have multiple things to draw
 	//but not 100% automated bc different vertex sizes
@@ -171,15 +173,11 @@ int main() {
 		//use time in the shader program (pulses color)
 		GLint timeLoc = glGetUniformLocation(shaderProgram, "_Time");
 		glUniform1f(timeLoc, time);
-
-		GLint moveType = glGetUniformLocation(shaderProgram, "_MoveType");
-		glUniform1f(moveType, 0);
 		
 		//TODO: Draw triangle (3 indices!)
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		//Seperate triangle movement
-		glUniform1f(moveType, 1);
 		glDrawArrays(GL_TRIANGLES, 3, 3);
 		//Parameter of what u draw, index of vertex, and num of verticies
 
