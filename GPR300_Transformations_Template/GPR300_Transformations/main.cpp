@@ -41,6 +41,32 @@ const float MOUSE_SENSITIVITY = 0.1f;
 glm::vec3 bgColor = glm::vec3(0);
 float exampleSliderFloat = 0.0f;
 
+struct Transform //This is for the cubes
+{
+	glm::vec3 pos;
+	glm::quat rot;
+	glm::vec3 scale;
+	glm::mat4 getModelMatrix()
+	{
+		return glm::mat4(1);
+	}
+};
+Transform transform[1];
+struct Camera
+{
+	float fov;
+	float orthSize;
+	bool orthographic;
+	glm::mat4 getViewMatrix()
+	{
+		return glm::mat4(1);
+	}
+	glm::mat4 getProjectionMatrix()
+	{
+		return glm::mat4(1);
+	}
+};
+
 int main() {
 	if (!glfwInit()) {
 		printf("glfw failed to init");
@@ -67,7 +93,7 @@ int main() {
 	//Dark UI theme.
 	ImGui::StyleColorsDark();
 
-	Shader shader("shaders/vertexShader.vert", "shaders/fragmentShader.frag");
+	Shader shader("shaders/vertexShader.vert", "shaders/fragmentShader.frag"); //Where the shaders are
 
 	MeshData cubeMeshData;
 	createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
@@ -100,12 +126,23 @@ int main() {
 
 		//Draw
 		shader.use();
+		shader.setFloat("_Time", time); //the unit thing with time in last program
+		
+		glm::mat4 modelMatrix = glm::mat4(1); //Identity
+		
+		//For loop here that spawns multiple cubes
+		//put the cubeMesh.draw() and setMat4 (model, transform[i].getModelMatrix());
+		transform[1].pos = glm::vec3(-.75, 0.0, 0.0);
+		transform[1].rot = glm::quat(0.707107, 0.707107, 0.00, 0.000);
+
+		shader.setMat4("_Model", transform[1].getModelMatrix());
 
 		cubeMesh.draw();
 
 		//Draw UI
 		ImGui::Begin("Settings");
 		ImGui::SliderFloat("Example slider", &exampleSliderFloat, 0.0f, 10.0f);
+		ImGui::ColorEdit3("Example Slider", &bgColor[0], 0.0f);//Sliders
 		ImGui::End();
 
 		ImGui::Render();
