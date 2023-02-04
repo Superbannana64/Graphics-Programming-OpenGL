@@ -43,29 +43,52 @@ float exampleSliderFloat = 0.0f;
 
 struct Transform //This is for the cubes
 {
-	glm::vec3 pos;
+	glm::vec4 pos;
 	glm::quat rot;
-	glm::vec3 scale;
+	glm::vec4 scale;
 	glm::mat4 getModelMatrix()
 	{
-		return glm::mat4(1);
+		glm::mat4 modelMatrix(1);
+		//modelMatrix = modelMatrix * position;
+
+		return modelMatrix;
 	}
 };
 Transform transform[1];
 struct Camera
 {
-	float fov;
-	float orthSize;
-	bool orthographic;
+	glm::vec3 position;
+	glm::quat rotation;
+	float fov;								//Gui
+	float orthSize;							//Gui
+	bool orthographic;						//Gui
 	glm::mat4 getViewMatrix()
 	{
 		return glm::mat4(1);
 	}
 	glm::mat4 getProjectionMatrix()
 	{
+		if (orthographic)
+		{
+			return ortho();
+		}
+		else
+		{
+			return perspective();
+		}
+	}
+	glm::mat4 ortho(float height, float aspectRatio, float nearPlane, float farPlane)
+	{
 		return glm::mat4(1);
 	}
+	glm::mat4 perspective(float fov, float aspectRatio, float nearPlane, float farPlane)
+	{
+		glm::mat4 per = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+		return per;
+	}
 };
+
+Camera camera;
 
 int main() {
 	if (!glfwInit()) {
@@ -128,21 +151,25 @@ int main() {
 		shader.use();
 		shader.setFloat("_Time", time); //the unit thing with time in last program
 		
-		glm::mat4 modelMatrix = glm::mat4(1); //Identity
+		//glm::mat4 modelMatrix = transform->getModelMatrix(); //Identity
 		
 		//For loop here that spawns multiple cubes
 		//put the cubeMesh.draw() and setMat4 (model, transform[i].getModelMatrix());
-		transform[1].pos = glm::vec3(-.75, 0.0, 0.0);
+		transform[1].pos = glm::vec4(-.75, 0.0, 0.0, 1.0);
 		transform[1].rot = glm::quat(0.707107, 0.707107, 0.00, 0.000);
+		transform[1].scale = glm::vec4(1.0, 1.0, 1.0, 1.0);
 
 		shader.setMat4("_Model", transform[1].getModelMatrix());
 
 		cubeMesh.draw();
 
 		//Draw UI
-		ImGui::Begin("Settings");
-		ImGui::SliderFloat("Example slider", &exampleSliderFloat, 0.0f, 10.0f);
-		ImGui::ColorEdit3("Example Slider", &bgColor[0], 0.0f);//Sliders
+		ImGui::Begin("Settings"); //Need orbit rad, speed, fov, orth h, orth toggle
+		ImGui::SliderFloat("Orbit Radius", &exampleSliderFloat, 0.0f, 10.0f);
+		ImGui::SliderFloat("Orbit Speed", &exampleSliderFloat, 0.0f, 10.0f);
+		ImGui::SliderFloat("FOV", &camera.fov, 10.0f, 120.0f);
+		ImGui::SliderFloat("Orthographic Height", &camera.orthSize, 10.0f, 50.0f);
+		ImGui::Checkbox("Orthographic", &camera.orthographic);
 		ImGui::End();
 
 		ImGui::Render();
