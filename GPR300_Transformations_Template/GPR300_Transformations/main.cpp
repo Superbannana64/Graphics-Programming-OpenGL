@@ -43,13 +43,17 @@ float exampleSliderFloat = 0.0f;
 
 struct Transform //This is for the cubes
 {
-	glm::vec4 pos;
+	glm::vec3 pos;
 	glm::quat rot;
-	glm::vec4 scale;
+	glm::vec3 scale;
 	glm::mat4 getModelMatrix()
 	{
 		glm::mat4 modelMatrix(1);
-		//modelMatrix = modelMatrix * position;
+		glm::mat4 trans = glm::translate(modelMatrix, pos);
+		glm::mat4 scaling = glm::scale(modelMatrix, scale);
+		glm::mat4 rotate = glm::mat4_cast(rot);
+		
+		modelMatrix = trans*rotate*scaling;
 
 		return modelMatrix;
 	}
@@ -57,29 +61,39 @@ struct Transform //This is for the cubes
 Transform transform[1];
 struct Camera
 {
-	glm::vec3 position;
+	glm::vec3 pos = glm::vec3(0, 0, -1);
 	glm::quat rotation;
-	float fov;								//Gui
-	float orthSize;							//Gui
-	bool orthographic;						//Gui
+	float  fov = 10.0f;								//Gui
+	float orthSize = 1.0f;							//Gui
+	bool orthographic = true;						//Gui
 	glm::mat4 getViewMatrix()
 	{
-		return glm::mat4(1);
+		glm::mat4 viewMatrix = glm::lookAt(pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		return viewMatrix;
 	}
 	glm::mat4 getProjectionMatrix()
 	{
 		if (orthographic)
 		{
-			return ortho();
+			float right = orthSize/2;
+			float top = orthSize / 2;
+			return ortho(right, top, 0.1f, 100.0f);
 		}
 		else
 		{
-			return perspective();
+			float aspectRatio = SCREEN_WIDTH / SCREEN_HEIGHT;
+			//return glm::mat4(1);
+			return perspective(fov, aspectRatio, 0.1f, 100.0f);
 		}
+		
 	}
-	glm::mat4 ortho(float height, float aspectRatio, float nearPlane, float farPlane)
+	glm::mat4 ortho(float right, float top, float nearPlane, float farPlane)
 	{
-		return glm::mat4(1);
+		float bottom = -top;
+		float left = -right;
+		glm::mat4 orth = glm::frustum(left, right, bottom, top, nearPlane, farPlane);
+		
+		return orth;
 	}
 	glm::mat4 perspective(float fov, float aspectRatio, float nearPlane, float farPlane)
 	{
@@ -150,25 +164,28 @@ int main() {
 		//Draw
 		shader.use();
 		shader.setFloat("_Time", time); //the unit thing with time in last program
-		
+		shader.setVec3("vPos", glm::vec3(1.0, 2.0, 2.0));
 		//glm::mat4 modelMatrix = transform->getModelMatrix(); //Identity
 		
 		//For loop here that spawns multiple cubes
 		//put the cubeMesh.draw() and setMat4 (model, transform[i].getModelMatrix());
-		transform[1].pos = glm::vec4(-.75, 0.0, 0.0, 1.0);
-		transform[1].rot = glm::quat(0.707107, 0.707107, 0.00, 0.000);
-		transform[1].scale = glm::vec4(1.0, 1.0, 1.0, 1.0);
+		transform[0].pos = glm::vec3(-1.0, 0.0, 0.0);
+		glm::vec3 EulerAngles(90, 45, 30);
+		transform[0].rot = glm::quat(EulerAngles);
+		transform[0].scale = glm::vec3(0.5, 0.5, 0.5);
 
-		shader.setMat4("_Model", transform[1].getModelMatrix());
+		shader.setMat4("_Model", transform[0].getModelMatrix());
+		shader.setMat4("_View", camera.getViewMatrix());
+		shader.setMat4("_Proj", camera.getProjectionMatrix());
 
 		cubeMesh.draw();
 
 		//Draw UI
 		ImGui::Begin("Settings"); //Need orbit rad, speed, fov, orth h, orth toggle
-		ImGui::SliderFloat("Orbit Radius", &exampleSliderFloat, 0.0f, 10.0f);
+		ImGui::SliderFloat("Orbit Radius", &exampleSliderFloat, 0.0f, 10.0f);//Cam Pos
 		ImGui::SliderFloat("Orbit Speed", &exampleSliderFloat, 0.0f, 10.0f);
-		ImGui::SliderFloat("FOV", &camera.fov, 10.0f, 120.0f);
-		ImGui::SliderFloat("Orthographic Height", &camera.orthSize, 10.0f, 50.0f);
+		ImGui::SliderFloat("FOV", &camera.fov, 15.5f, 18.0f);
+		ImGui::SliderFloat("Orthographic Height", &camera.orthSize, 1.0f, 50.0f);
 		ImGui::Checkbox("Orthographic", &camera.orthographic);
 		ImGui::End();
 
