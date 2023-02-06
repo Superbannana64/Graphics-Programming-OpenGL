@@ -102,8 +102,8 @@ struct Camera
 	{
 		if (orthographic)
 		{
-			float width = orthSize/2;
-			float height = orthSize/2;
+			float width = orthSize;
+			float height = orthSize;
 			return ortho(width, height, 0.1f, 100.0f);
 		}
 		else
@@ -148,6 +148,8 @@ struct Camera
 };
 
 Camera camera;
+
+int i = 0;
 
 int main() {
 	if (!glfwInit()) {
@@ -194,6 +196,27 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	for (i = 0; i < 5; i++)
+	{
+		float xPos = (-1) + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1))));
+		float yPos = (-1) + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1))));
+		float zPos = (-1) + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (1 - (-1))));
+		int xRot = rand() % 361;
+		int yRot = rand() % 361;
+		int zRot = rand() % 361;
+		float xSca = rand() % 1 + 0.1;
+		float ySca = rand() % 1 + 0.1;
+		float zSca = rand() % 1 + 0.1;
+
+		transform[i].pos = glm::vec3(xPos, yPos, zPos);
+		transform[i].rot = glm::quat(glm::vec3(xRot, yRot, zRot));
+		transform[i].scale = glm::vec3(xSca, ySca, zSca);
+
+		shader.setMat4("_Model", transform[i].getModelMatrix());
+		shader.setMat4("_View", camera.getViewMatrix());
+		shader.setMat4("_Proj", camera.getProjectionMatrix());
+	}
+
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(bgColor.r,bgColor.g,bgColor.b, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -209,54 +232,36 @@ int main() {
 		//Draw
 		shader.use();
 		shader.setFloat("_Time", time); //the unit thing with time in last program
-		shader.setVec3("vPos", glm::vec3(1.0, 2.0, 2.0));
+		shader.setVec3("vPos", glm::vec3(1.0, 1.0, 1.0));
 		//glm::mat4 modelMatrix = transform->getModelMatrix(); //Identity
 		//USE glm::vec3 EulerAngles(60, 45, 30) in the loop
 		//For loop here that spawns multiple cubes
-		
-		/*for (int i = 0; i < 5; i++)
-		{
-			float w = -1 * (SCREEN_WIDTH / 2);
-			float h = -1 * (SCREEN_HEIGHT / 2);
-
-			int wR = SCREEN_WIDTH + 1;
-			int hR = SCREEN_WIDTH + 1;
-
-			float xPos = rand() % wR + w;
-			float yPos = rand() % hR + h;
-			float zPos = rand() % 41 + (-20);
-			int xRot = rand() % 361;
-			int yRot = rand() % 361;
-			int zRot = rand() % 361;
-			float xSca = rand() % 3 + 1;
-			float ySca = rand() % 3 + 1;
-			float zSca = rand() % 3 + 1;
-
-			transform[i].pos = glm::vec3(xPos, yPos, zPos);
-			transform[i].rot = glm::quat(glm::vec3(xRot, yRot, zRot));
-			transform[i].scale = glm::vec3(xSca, ySca, zSca);
-
-			shader.setMat4("_Model", transform[i].getModelMatrix());
-			shader.setMat4("_View", camera.getViewMatrix());
-			shader.setMat4("_Proj", camera.getProjectionMatrix());
-		}*/
-
-		transform[0].pos = glm::vec3(0.5f, 0.25f, 0.0f);
-		transform[0].rot = glm::quat(glm::vec3(60, 45, 30));
-		transform[0].scale = glm::vec3(0.5, 0.5, 0.5);
 
 		shader.setMat4("_Model", transform[0].getModelMatrix());
 		shader.setMat4("_View", camera.getViewMatrix());
 		shader.setMat4("_Proj", camera.getProjectionMatrix());
 
 		cubeMesh.draw();
-		
-		transform[1].pos = glm::vec3(0.0f, 0.25f, 0.0f);
-		
-		transform[1].rot = glm::quat(glm::vec3(60, 15, 30));
-		transform[1].scale = glm::vec3(0.25, 0.25, 0.25);
 
 		shader.setMat4("_Model", transform[1].getModelMatrix());
+		shader.setMat4("_View", camera.getViewMatrix());
+		shader.setMat4("_Proj", camera.getProjectionMatrix());
+
+		cubeMesh.draw();
+
+		shader.setMat4("_Model", transform[2].getModelMatrix());
+		shader.setMat4("_View", camera.getViewMatrix());
+		shader.setMat4("_Proj", camera.getProjectionMatrix());
+
+		cubeMesh.draw();
+
+		shader.setMat4("_Model", transform[3].getModelMatrix());
+		shader.setMat4("_View", camera.getViewMatrix());
+		shader.setMat4("_Proj", camera.getProjectionMatrix());
+
+		cubeMesh.draw();
+
+		shader.setMat4("_Model", transform[4].getModelMatrix());
 		shader.setMat4("_View", camera.getViewMatrix());
 		shader.setMat4("_Proj", camera.getProjectionMatrix());
 
