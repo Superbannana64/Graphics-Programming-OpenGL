@@ -49,35 +49,62 @@ struct Transform //This is for the cubes
 	glm::mat4 getModelMatrix()
 	{
 		glm::mat4 modelMatrix(1);
-		glm::mat4 trans = glm::translate(modelMatrix, pos);
-		glm::mat4 scaling = glm::scale(modelMatrix, scale);
-		glm::mat4 rotate = glm::mat4_cast(rot);
+		glm::mat4 trans = glm::mat4 (
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			pos.x,pos.y,pos.z,1.0f
+		);
+		glm::mat4 scaling = glm::mat4(
+			scale.x, 0.0f, 0.0f, 0.0f,
+			0.0f, scale.y, 0.0f, 0.0f,
+			0.0f, 0.0f, scale.z, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+		//glm::mat4 scaling = glm::scale(modelMatrix, scale);
+		glm::mat3 rotateX = glm::mat3(
+			1.0f, 0.0f, 0.0f,
+			0.0f, cos(rot.x), sin(rot.x),
+			0.0f, -sin(rot.x), cos(rot.x)
+		);
+		glm::mat3 rotateY = glm::mat3(
+			cos(rot.x), 0.0f, -sin(rot.y),
+			0.0f, 1.0f, 0.0f,
+			sin(rot.y), 0.0f, cos(rot.x)
+		);
+		glm::mat3 rotateZ = glm::mat3(
+			cos(rot.z), sin(rot.z), 0.0f,
+			-sin(rot.z), cos(rot.z), 0.0f,
+			0.0f, 0.0f, 1.0f
+		);
 		
+		glm::mat4 rotate = rotateX * rotateY * rotateZ;
+
 		modelMatrix = trans*rotate*scaling;
 
 		return modelMatrix;
 	}
 };
-Transform transform[1];
+Transform transform[5];
 struct Camera
 {
-	glm::vec3 pos = glm::vec3(0, 0, -1);
+	glm::vec3 pos = glm::vec3(0, 0, 0);
 	glm::quat rotation;
-	float  fov = 10.0f;								//Gui
-	float orthSize = 1.0f;							//Gui
+	float  fov = 90.0f;								//Gui
+	float orthSize = 10.0f;							//Gui
 	bool orthographic = true;						//Gui
 	glm::mat4 getViewMatrix()
 	{
-		glm::mat4 viewMatrix = glm::lookAt(pos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0,0,-1), pos, glm::vec3(0, 1, 0));
 		return viewMatrix;
 	}
 	glm::mat4 getProjectionMatrix()
 	{
 		if (orthographic)
 		{
-			float right = orthSize/2;
-			float top = orthSize / 2;
-			return ortho(right, top, 0.1f, 100.0f);
+			float width = orthSize/2;
+			float height = orthSize/2;
+			return ortho(width, height, 0.1f, 100.0f);
 		}
 		else
 		{
@@ -91,14 +118,32 @@ struct Camera
 	{
 		float bottom = -top;
 		float left = -right;
-		glm::mat4 orth = glm::frustum(left, right, bottom, top, nearPlane, farPlane);
+		/*glm::mat4 orth = glm::frustum(left, right, bottom, top, nearPlane, farPlane); */
 		
+		glm::mat4 orth = glm::mat4(
+			2 / (right - left), 0.0f, 0.0f, 0.0f,
+			0.0f, 2 / (top - bottom), 0.0f, 0.0f,
+			0.0f, 0.0f, -2 / (farPlane - nearPlane), 0.0f,
+			-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(farPlane + nearPlane) / (farPlane - nearPlane), 1.0f
+		);
+
 		return orth;
 	}
-	glm::mat4 perspective(float fov, float aspectRatio, float nearPlane, float farPlane)
+	glm::mat4 perspective(float fov, float a, float n, float f)
 	{
-		glm::mat4 per = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
-		return per;
+		float g = (glm::pi<float>()/180);
+		float t = n * tan((g*fov) / 2);
+		float b = -t;
+		float r = t * a;
+		float l = -r;
+		glm::mat4 persp = glm::mat4(
+			(2*n)/(r-l), 0.0f, (r+l)/(r-l), 0.0f,
+			0.0f, (2 * n) / (t - b), (t+b)/(t-b), 0.0f,
+			0.0f, 0.0f, -((f + n) / (f - n)), -1.0f,
+			0.0f, 0.0f, -((2 * f * n) / (f - n)), 0.0f
+		);
+		persp = glm::inverse(persp);
+		return persp;
 	}
 };
 
@@ -166,12 +211,38 @@ int main() {
 		shader.setFloat("_Time", time); //the unit thing with time in last program
 		shader.setVec3("vPos", glm::vec3(1.0, 2.0, 2.0));
 		//glm::mat4 modelMatrix = transform->getModelMatrix(); //Identity
-		
+		//USE glm::vec3 EulerAngles(60, 45, 30) in the loop
 		//For loop here that spawns multiple cubes
-		//put the cubeMesh.draw() and setMat4 (model, transform[i].getModelMatrix());
-		transform[0].pos = glm::vec3(-1.0, 0.0, 0.0);
-		glm::vec3 EulerAngles(90, 45, 30);
-		transform[0].rot = glm::quat(EulerAngles);
+		
+		/*for (int i = 0; i < 5; i++)
+		{
+			float w = -1 * (SCREEN_WIDTH / 2);
+			float h = -1 * (SCREEN_HEIGHT / 2);
+
+			int wR = SCREEN_WIDTH + 1;
+			int hR = SCREEN_WIDTH + 1;
+
+			float xPos = rand() % wR + w;
+			float yPos = rand() % hR + h;
+			float zPos = rand() % 41 + (-20);
+			int xRot = rand() % 361;
+			int yRot = rand() % 361;
+			int zRot = rand() % 361;
+			float xSca = rand() % 3 + 1;
+			float ySca = rand() % 3 + 1;
+			float zSca = rand() % 3 + 1;
+
+			transform[i].pos = glm::vec3(xPos, yPos, zPos);
+			transform[i].rot = glm::quat(glm::vec3(xRot, yRot, zRot));
+			transform[i].scale = glm::vec3(xSca, ySca, zSca);
+
+			shader.setMat4("_Model", transform[i].getModelMatrix());
+			shader.setMat4("_View", camera.getViewMatrix());
+			shader.setMat4("_Proj", camera.getProjectionMatrix());
+		}*/
+
+		transform[0].pos = glm::vec3(0.5f, 0.25f, 0.0f);
+		transform[0].rot = glm::quat(glm::vec3(60, 45, 30));
 		transform[0].scale = glm::vec3(0.5, 0.5, 0.5);
 
 		shader.setMat4("_Model", transform[0].getModelMatrix());
@@ -179,12 +250,25 @@ int main() {
 		shader.setMat4("_Proj", camera.getProjectionMatrix());
 
 		cubeMesh.draw();
+		
+		transform[1].pos = glm::vec3(0.0f, 0.25f, 0.0f);
+		
+		transform[1].rot = glm::quat(glm::vec3(60, 15, 30));
+		transform[1].scale = glm::vec3(0.25, 0.25, 0.25);
+
+		shader.setMat4("_Model", transform[1].getModelMatrix());
+		shader.setMat4("_View", camera.getViewMatrix());
+		shader.setMat4("_Proj", camera.getProjectionMatrix());
+
+		cubeMesh.draw();
+
 
 		//Draw UI
-		ImGui::Begin("Settings"); //Need orbit rad, speed, fov, orth h, orth toggle
+		//Implement orbiting speed and radius
+		ImGui::Begin("Settings");
 		ImGui::SliderFloat("Orbit Radius", &exampleSliderFloat, 0.0f, 10.0f);//Cam Pos
 		ImGui::SliderFloat("Orbit Speed", &exampleSliderFloat, 0.0f, 10.0f);
-		ImGui::SliderFloat("FOV", &camera.fov, 15.5f, 18.0f);
+		ImGui::SliderFloat("FOV", &camera.fov, 10.0f, 170.0f);
 		ImGui::SliderFloat("Orthographic Height", &camera.orthSize, 1.0f, 50.0f);
 		ImGui::Checkbox("Orthographic", &camera.orthographic);
 		ImGui::End();
