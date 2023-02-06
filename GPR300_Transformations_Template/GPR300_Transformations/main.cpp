@@ -42,6 +42,8 @@ const float MOUSE_SENSITIVITY = 0.1f;
 
 glm::vec3 bgColor = glm::vec3(0);
 float exampleSliderFloat = 0.0f;
+float orbitRadius = 5.0f;
+float orbitSpeed = 1.0f;
 
 struct Transform //This is for the cubes
 {
@@ -90,14 +92,21 @@ struct Transform //This is for the cubes
 Transform transform[5];
 struct Camera
 {
-	glm::vec3 pos = glm::vec3(0, 0, 0);
+	glm::vec3 pos = glm::vec3(0, 0, 3);
+	glm::vec3 target = glm::vec3(0, 0, 0);
 	glm::quat rotation;
 	float  fov = 90.0f;								//Gui
 	float orthSize = 10.0f;							//Gui
 	bool orthographic = true;						//Gui
 	glm::mat4 getViewMatrix()
 	{
-		glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0,0,-1), pos, glm::vec3(0, 1, 0));
+		float camX = sin(glfwGetTime() * orbitSpeed) *orbitRadius;
+		float camZ = cos(glfwGetTime() * orbitSpeed) *orbitRadius;
+
+		pos = glm::vec3(camX, 0, camZ);
+
+		glm::mat4 viewMatrix = glm::lookAt(pos, target, glm::vec3(0, 1, 0));
+
 		return viewMatrix;
 	}
 	glm::mat4 getProjectionMatrix()
@@ -147,6 +156,7 @@ struct Camera
 		persp = glm::inverse(persp);
 		return persp;
 	}
+
 };
 
 Camera camera;
@@ -244,39 +254,26 @@ int main() {
 		shader.setMat4("_Model", transform[0].getModelMatrix());
 		shader.setMat4("_View", camera.getViewMatrix());
 		shader.setMat4("_Proj", camera.getProjectionMatrix());
-
 		cubeMesh.draw();
 
 		shader.setMat4("_Model", transform[1].getModelMatrix());
-		shader.setMat4("_View", camera.getViewMatrix());
-		shader.setMat4("_Proj", camera.getProjectionMatrix());
-
 		cubeMesh.draw();
 
 		shader.setMat4("_Model", transform[2].getModelMatrix());
-		shader.setMat4("_View", camera.getViewMatrix());
-		shader.setMat4("_Proj", camera.getProjectionMatrix());
-
 		cubeMesh.draw();
 
 		shader.setMat4("_Model", transform[3].getModelMatrix());
-		shader.setMat4("_View", camera.getViewMatrix());
-		shader.setMat4("_Proj", camera.getProjectionMatrix());
-
 		cubeMesh.draw();
 
 		shader.setMat4("_Model", transform[4].getModelMatrix());
-		shader.setMat4("_View", camera.getViewMatrix());
-		shader.setMat4("_Proj", camera.getProjectionMatrix());
-
 		cubeMesh.draw();
 
 
 		//Draw UI
 		//Implement orbiting speed and radius
 		ImGui::Begin("Settings");
-		ImGui::SliderFloat("Orbit Radius", &exampleSliderFloat, 0.0f, 10.0f);//Cam Pos
-		ImGui::SliderFloat("Orbit Speed", &exampleSliderFloat, 0.0f, 10.0f);
+		ImGui::SliderFloat("Orbit Radius", &orbitRadius, 0.0f, 10.0f);//Cam Pos
+		ImGui::SliderFloat("Orbit Speed", &orbitSpeed, 0.0f, 10.0f);
 		ImGui::SliderFloat("FOV", &camera.fov, 10.0f, 170.0f);
 		ImGui::SliderFloat("Orthographic Height", &camera.orthSize, 1.0f, 50.0f);
 		ImGui::Checkbox("Orthographic", &camera.orthographic);
