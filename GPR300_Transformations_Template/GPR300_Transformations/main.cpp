@@ -18,6 +18,8 @@
 #include "EW/Shader.h"
 #include "EW/ShapeGen.h"
 
+#include <time.h>
+
 void resizeFrameBufferCallback(GLFWwindow* window, int width, int height);
 void keyboardCallback(GLFWwindow* window, int keycode, int scancode, int action, int mods);
 
@@ -156,6 +158,8 @@ int main() {
 		printf("glfw failed to init");
 		return 1;
 	}
+
+	srand(time(NULL));
 
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Transformations", 0, 0);
 	glfwMakeContextCurrent(window);
