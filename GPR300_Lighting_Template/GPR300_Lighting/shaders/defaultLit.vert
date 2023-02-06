@@ -6,9 +6,11 @@ uniform mat4 _Model;
 uniform mat4 _View;
 uniform mat4 _Projection;
 
+out vec3 FragPos;
 out vec3 Normal;
 
 void main(){    
     Normal = vNormal;
     gl_Position = _Projection * _View * _Model * vec4(vPos,1);
+    FragPos = vec3(_Model * vec4(vPos,1.0));
 }

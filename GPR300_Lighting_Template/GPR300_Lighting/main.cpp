@@ -156,6 +156,9 @@ int main() {
 		litShader.setMat4("_Projection", camera.getProjectionMatrix());
 		litShader.setMat4("_View", camera.getViewMatrix());
 		litShader.setVec3("_LightPos", lightTransform.position);
+		litShader.setVec3("_ObjectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+		litShader.setVec3("_LightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setVec3("_ViewPos", camera.getPosition());
 		//Draw cube
 		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
 		cubeMesh.draw();
