@@ -52,7 +52,7 @@ Camera camera((float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
 
 glm::vec3 bgColor = glm::vec3(0);
 glm::vec3 lightColor = glm::vec3(1.0f);
-glm::vec3 lightPosition = glm::vec3(0.0f, 3.0f, 0.0f);
+glm::vec3 lightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
 
 //Materials
 glm::vec3 objectColor = glm::vec3(1.0f);
@@ -162,8 +162,8 @@ int main() {
 		litShader.use();
 		litShader.setMat4("_Projection", camera.getProjectionMatrix());
 		litShader.setMat4("_View", camera.getViewMatrix());
-		litShader.setVec3("_LightPos", lightPosition);
-		litShader.setVec3("_LightColor", lightColor);
+		litShader.setVec3("dLight.direction", lightPosition);
+		litShader.setVec3("dLight.lightColor", lightColor);
 		litShader.setVec3("_ViewPos", camera.getPosition());
 
 		//Materials Make them all ImGUI interfacable
@@ -174,9 +174,9 @@ int main() {
 		litShader.setFloat("material.shininess", matShiny);
 
 		//light
-		litShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		litShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		litShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("dLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("dLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
 		//Draw cube
 		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
@@ -203,18 +203,18 @@ int main() {
 		sphereMesh.draw();
 
 		//Draw UI
-		ImGui::Begin("Base Settings");
+		ImGui::Begin("Directional Light Settings");
 
 		ImGui::ColorEdit3("Light Color", &lightColor.r);
-		ImGui::DragFloat3("Light Position", &lightTransform.position.x);
+		ImGui::DragFloat3("Light Direction", (float*)&lightPosition);
 		ImGui::End();
 
 		//Material Settings
 		ImGui::Begin("Matterial Settings");
 		ImGui::ColorEdit3("Material Color", &objectColor.r);
-		ImGui::DragFloat("AmbientK", &matAmbient, 1.0f, 0.0f, 1.0f);
-		ImGui::DragFloat("DiffuseK", &matDiffuse, 1.0f, 0.0f, 1.0f);
-		ImGui::DragFloat("SpecularK", &matSpecular, 1.0f, 0.0f, 1.0f);
+		ImGui::DragFloat("AmbientK", &matAmbient, 0.001f, 0.0f, 1.0f);
+		ImGui::DragFloat("DiffuseK", &matDiffuse, 0.001f, 0.0f, 1.0f);
+		ImGui::DragFloat("SpecularK", &matSpecular, 0.001f, 0.0f, 1.0f);
 		ImGui::DragFloat("Shininess", &matShiny, 1.0f, 1.0f, 512.0f);
 		ImGui::End();
 

@@ -10,19 +10,19 @@ struct Material {
 }; 
 
 //Make different structs for directional, point, and spot lights
-struct Light {
-    vec3 position;
+struct DirectionalLight {
+    vec3 direction;
     vec3 lightColor;
+
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
 };
 
-uniform vec3 _LightColor;
 uniform vec3 _LightPos;
 uniform vec3 _ViewPos;
 uniform Material material;
-uniform Light light;  
+uniform DirectionalLight dLight;  
 
 in vec3 Normal;
 in vec3 FragPos;
@@ -30,19 +30,19 @@ in vec3 FragPos;
 void main(){         
     
     //ambient
-    vec3 ambient = (_LightColor*light.ambient) * material.ambient;
+    vec3 ambient = (dLight.lightColor*dLight.ambient) * material.ambient;
 
     //Diffuse
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(_LightPos - FragPos);
+    vec3 lightDir = normalize(-dLight.direction);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = _LightColor*light.diffuse * (diff * material.diffuse);
+    vec3 diffuse = dLight.lightColor*dLight.diffuse * (diff * material.diffuse);
 
     //specular
     vec3 viewDir = normalize(_ViewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = _LightColor*light.specular * (spec * material.specular);    
+    vec3 specular = dLight.lightColor*dLight.specular * (spec * material.specular);    
 
     vec3 result = material.objectColor * (ambient+diffuse+specular);
 
