@@ -58,12 +58,11 @@ float dLightIntensity = 1;
 
 //Point
 glm::vec3 pLightColor = glm::vec3(1.0f);
-glm::vec3 pLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+glm::vec3 pLightPosition = glm::vec3(-2.2f, 2.0f, 0.3f);
 float pLightIntensity = 1;
 
 //Spot
 glm::vec3 sLightColor = glm::vec3(1.0f);
-glm::vec3 sLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
 float sLightIntensity = 1;
 
 //Materials
@@ -261,7 +260,7 @@ int main() {
 
 		ImGui::Begin("Spot Light Settings");
 		ImGui::ColorEdit3("Light Color", &sLightColor.r);
-		ImGui::DragFloat3("Light Direction", (float*)&sLightPosition);
+		//ImGui::DragFloat3("Light Direction", (float*)&sLightPosition);
 		ImGui::DragFloat("Intensity", &sLightIntensity, 0.1f, 0.0f, 5.0f);
 		//Attenuation
 		//min angle
@@ -271,9 +270,9 @@ int main() {
 		//Material Settings
 		ImGui::Begin("Matterial Settings");
 		ImGui::ColorEdit3("Material Color", &objectColor.r);
-		ImGui::DragFloat("AmbientK", &matAmbient, 0.001f, 0.0f, 1.0f);
-		ImGui::DragFloat("DiffuseK", &matDiffuse, 0.001f, 0.0f, 1.0f);
-		ImGui::DragFloat("SpecularK", &matSpecular, 0.001f, 0.0f, 1.0f);
+		ImGui::DragFloat("AmbientK", &matAmbient, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("DiffuseK", &matDiffuse, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("SpecularK", &matSpecular, 0.01f, 0.0f, 1.0f);
 		ImGui::DragFloat("Shininess", &matShiny, 1.0f, 1.0f, 512.0f);
 		ImGui::End();
 
