@@ -50,9 +50,21 @@ const float CAMERA_ZOOM_SPEED = 3.0f;
 
 Camera camera((float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
 
+//Directional
 glm::vec3 bgColor = glm::vec3(0);
-glm::vec3 lightColor = glm::vec3(1.0f);
-glm::vec3 lightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+glm::vec3 dLightColor = glm::vec3(1.0f);
+glm::vec3 dLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+float dLightIntensity = 1;
+
+//Point
+glm::vec3 pLightColor = glm::vec3(1.0f);
+glm::vec3 pLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+float pLightIntensity = 1;
+
+//Spot
+glm::vec3 sLightColor = glm::vec3(1.0f);
+glm::vec3 sLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+float sLightIntensity = 1;
 
 //Materials
 glm::vec3 objectColor = glm::vec3(1.0f);
@@ -162,9 +174,24 @@ int main() {
 		litShader.use();
 		litShader.setMat4("_Projection", camera.getProjectionMatrix());
 		litShader.setMat4("_View", camera.getViewMatrix());
-		litShader.setVec3("dLight.direction", lightPosition);
-		litShader.setVec3("dLight.lightColor", lightColor);
 		litShader.setVec3("_ViewPos", camera.getPosition());
+
+		//Directional Light
+		litShader.setVec3("dLight.direction", dLightPosition);
+		litShader.setVec3("dLight.lightColor", dLightColor);
+		litShader.setFloat("dLight.intensity", dLightIntensity);
+		//Point Light
+		litShader.setVec3("pLight.position", pLightPosition);
+		litShader.setVec3("pLight.lightColor", pLightColor);
+		litShader.setFloat("pLight.intensity", pLightIntensity);
+		//Spot Light
+		litShader.setVec3("sLight.position", camera.getPosition());
+		litShader.setVec3("sLight.direction", camera.getForward());
+		litShader.setVec3("sLight.lightColor", sLightColor);
+		litShader.setFloat("sLight.intensity", sLightIntensity);
+		litShader.setFloat("sLight.cutoff", glm::cos(glm::radians(12.5f)));
+		litShader.setFloat("sLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+
 
 		//Materials Make them all ImGUI interfacable
 		litShader.setVec3("material.objectColor", objectColor);
@@ -173,10 +200,25 @@ int main() {
 		litShader.setFloat("material.specular", matSpecular);
 		litShader.setFloat("material.shininess", matShiny);
 
-		//light
+		//Directional light
 		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
 		litShader.setVec3("dLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		litShader.setVec3("dLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		//Point Light
+		litShader.setVec3("pLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("pLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("pLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setFloat("pLight.constant", 1.0f);
+		litShader.setFloat("pLight.linear", 0.09f);
+		litShader.setFloat("pLight.quadratic", 0.032f);
+		//Spot Light
+		litShader.setVec3("sLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("sLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("sLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setFloat("sLight.constant", 1.0f);
+		litShader.setFloat("sLight.linear", 0.09f);
+		litShader.setFloat("sLight.quadratic", 0.032f);
+
 
 		//Draw cube
 		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
@@ -199,14 +241,31 @@ int main() {
 		unlitShader.setMat4("_Projection", camera.getProjectionMatrix());
 		unlitShader.setMat4("_View", camera.getViewMatrix());
 		unlitShader.setMat4("_Model", lightTransform.getModelMatrix());
-		unlitShader.setVec3("_Color", lightColor);
+		unlitShader.setVec3("_Color", dLightColor);
 		sphereMesh.draw();
 
 		//Draw UI
 		ImGui::Begin("Directional Light Settings");
 
-		ImGui::ColorEdit3("Light Color", &lightColor.r);
-		ImGui::DragFloat3("Light Direction", (float*)&lightPosition);
+		ImGui::ColorEdit3("Light Color", &dLightColor.r);
+		ImGui::DragFloat3("Light Direction", (float*)&dLightPosition);
+		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
+		ImGui::End();
+
+		ImGui::Begin("Point Light Settings");
+		ImGui::ColorEdit3("Light Color", &pLightColor.r);
+		//ImGui::DragFloat3("Light Direction", (float*)&pLightPosition);
+		ImGui::DragFloat("Intensity", &pLightIntensity, 0.1f, 0.0f, 5.0f);
+		//Attentuation
+		ImGui::End();
+
+		ImGui::Begin("Spot Light Settings");
+		ImGui::ColorEdit3("Light Color", &sLightColor.r);
+		ImGui::DragFloat3("Light Direction", (float*)&sLightPosition);
+		ImGui::DragFloat("Intensity", &sLightIntensity, 0.1f, 0.0f, 5.0f);
+		//Attenuation
+		//min angle
+		//max angle
 		ImGui::End();
 
 		//Material Settings
