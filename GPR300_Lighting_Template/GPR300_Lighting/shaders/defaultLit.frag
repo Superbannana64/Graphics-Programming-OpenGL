@@ -57,6 +57,7 @@ struct SpotLight{
 uniform vec3 _LightPos;
 uniform vec3 _ViewPos;
 uniform Material material;
+
 uniform DirectionalLight dLight;  
 uniform PointLight pLight;
 uniform SpotLight sLight;
@@ -64,54 +65,18 @@ uniform SpotLight sLight;
 in vec3 Normal;
 in vec3 FragPos;
 
+vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir); 
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+
 void main(){         
     
     vec3 Norm = normalize(Normal);
     vec3 viewDir = normalize(_ViewPos - FragPos);
 
-    ///Directional Light
-    //ambient
+    vec3 result = CalcDirLight(dLight, Norm, viewDir);
+    result += CalcPointLight(pLight, Norm,FragPos, viewDir);
+
     /*
-    vec3 dAmbient = (material.objectColor * material.ambient) * dLight.ambient * (dLight.lightColor * dLight.intensity);
-
-    //Diffuse
-    vec3 dLightDir = normalize(-dLight.direction);
-    float dDiff = max(dot(Norm, dLightDir), 0.0);
-    vec3 dDiffuse = dLight.lightColor*dLight.diffuse * (dDiff * material.diffuse);
-
-    //specular
-    vec3 dReflectDir = reflect(-dLightDir, Norm);
-    float dSpec = pow(max(dot(viewDir, dReflectDir), 0.0), material.shininess);
-    vec3 dSpecular = dLight.lightColor*dLight.specular * (dSpec * material.specular);    
-
-    vec3 result = (dAmbient+dDiffuse+dSpecular);*/
-
-    ///Point Light
-    //Ambient
-    /*
-    vec3 pAmbient = (material.objectColor * material.ambient) * pLight.ambient * (pLight.lightColor * pLight.intensity);
-
-    //Diffuse
-    vec3 pLightDir = normalize(-pLight.position);
-    float pDiff = max(dot(Norm, pLightDir), 0.0);
-    vec3 pDiffuse = pLight.lightColor * pLight.diffuse * (pDiff * material.diffuse);
-
-    //specular
-    vec3 pReflectDir = reflect(-pLightDir, Norm);
-    float pSpec = pow(max(dot(viewDir, pReflectDir), 0.0), material.shininess);
-    vec3 pSpecular = pLight.lightColor*pLight.specular * (pSpec * material.specular);
-
-    //Attenuation
-    float distance = length(pLight.position - FragPos);
-    float attenuation = 1.0 / (pLight.constant + pLight.linear * distance + pLight.quadratic * (distance * distance)); 
-
-    pAmbient *= attenuation;
-    pDiffuse *= attenuation;
-    pSpecular *= attenuation;
-
-    vec3 result = (pAmbient+pDiffuse+pSpecular);*/
-
-
     vec3 sLightDir = normalize(-sLight.position);
     //Spot Light
     float theta     = dot(sLightDir, normalize(-sLight.direction));
@@ -141,7 +106,43 @@ void main(){
     sDiffuse *= intensity;
     sSpecular *= intensity;
 
-    vec3 result = (sAmbient+sDiffuse+sSpecular);
+    vec3 result = (sAmbient+sDiffuse+sSpecular);*/
 
     FragColor = vec4(result,1.0f);
 }
+
+vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
+{
+    vec3 lightDir = normalize(-light.direction);
+    float diff = max(dot(normal, lightDir), 0.0);
+    
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    
+    vec3 ambient  = (material.objectColor * material.ambient) * light.ambient * (light.lightColor * light.intensity);
+    vec3 diffuse  = light.lightColor*light.diffuse * (diff * material.diffuse);
+    vec3 specular = light.lightColor*light.specular * (spec * material.specular);
+
+    return (ambient + diffuse + specular);
+}
+
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    
+    float diff = max(dot(normal, lightDir), 0.0);
+   
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    
+    float distance    = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    // combine results
+    vec3 ambient  = (material.objectColor * material.ambient) * light.ambient * (light.lightColor * light.intensity);
+    vec3 diffuse  = light.lightColor*light.diffuse * (diff * material.diffuse);
+    vec3 specular = light.lightColor*light.specular * (spec * material.specular);
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+} 

@@ -254,7 +254,7 @@ int main() {
 
 		ImGui::Begin("Point Light Settings");
 		ImGui::ColorEdit3("Light Color", &pLightColor.r);
-		//ImGui::DragFloat3("Light Direction", (float*)&pLightPosition);
+		ImGui::DragFloat3("Light Direction", (float*)&pLightPosition);
 		ImGui::DragFloat("Intensity", &pLightIntensity, 0.1f, 0.0f, 5.0f);
 		//Attentuation
 		ImGui::End();
