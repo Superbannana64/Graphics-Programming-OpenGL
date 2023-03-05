@@ -92,14 +92,15 @@ int main() {
 	//Dark UI theme.
 	ImGui::StyleColorsDark();
 
+
 	//Used to draw shapes. This is the shader you will be completing.
 	Shader litShader("shaders/defaultLit.vert", "shaders/defaultLit.frag");
 
 	//Used to draw light sphere
 	Shader unlitShader("shaders/defaultLit.vert", "shaders/unlit.frag");
 
-	ew::MeshData cubeMeshData;
-	ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
+	//ew::MeshData cubeMeshData;
+	//ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
 	//ew::MeshData sphereMeshData;
 	//ew::createSphere(0.5f, 64, sphereMeshData);
 	//ew::MeshData cylinderMeshData;
@@ -107,7 +108,7 @@ int main() {
 	ew::MeshData planeMeshData;
 	ew::createPlane(1.0f, 1.0f, planeMeshData);
 
-	ew::Mesh cubeMesh(&cubeMeshData);
+	//ew::Mesh cubeMesh(&cubeMeshData);
 	//ew::Mesh sphereMesh(&sphereMeshData);
 	ew::Mesh planeMesh(&planeMeshData);
 	//ew::Mesh cylinderMesh(&cylinderMeshData);
@@ -125,23 +126,22 @@ int main() {
 	glDepthFunc(GL_LESS);
 
 	//Initialize shape transforms
-	ew::Transform cubeTransform;
-	ew::Transform sphereTransform;
+	//ew::Transform cubeTransform;
+	//ew::Transform sphereTransform;
 	ew::Transform planeTransform;
-	ew::Transform cylinderTransform;
+	//ew::Transform cylinderTransform;
 	ew::Transform lightTransform;
 
-	cubeTransform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
-	sphereTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	//cubeTransform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+	//sphereTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	planeTransform.position = glm::vec3(0.0f, -1.0f, 0.0f);
 	planeTransform.scale = glm::vec3(10.0f);
 
-	cylinderTransform.position = glm::vec3(2.0f, 0.0f, 0.0f);
+	//cylinderTransform.position = glm::vec3(2.0f, 0.0f, 0.0f);
 
 	lightTransform.scale = glm::vec3(0.5f);
 	lightTransform.position = glm::vec3(0.0f, 5.0f, 0.0f);
-
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -161,9 +161,10 @@ int main() {
 		litShader.setMat4("_Projection", camera.getProjectionMatrix());
 		litShader.setMat4("_View", camera.getViewMatrix());
 		litShader.setVec3("_LightPos", lightTransform.position);
+		
 		//Draw cube
-		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
-		cubeMesh.draw();
+		//litShader.setMat4("_Model", cubeTransform.getModelMatrix());
+		//cubeMesh.draw();
 
 		//Draw sphere
 		//litShader.setMat4("_Model", sphereTransform.getModelMatrix());
@@ -175,6 +176,7 @@ int main() {
 
 		//Draw plane
 		litShader.setMat4("_Model", planeTransform.getModelMatrix());
+		//set outTexture to createTexture("container.jpg"); ?
 		planeMesh.draw();
 
 		//Draw light as a small sphere using unlit shader, ironically.
