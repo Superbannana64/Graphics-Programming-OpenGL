@@ -142,7 +142,9 @@ int main() {
 
 	lightTransform.scale = glm::vec3(0.5f);
 	lightTransform.position = glm::vec3(0.0f, 5.0f, 0.0f);
-	GLuint texture = createTexture("container.jpg");
+
+	GLuint conTexture = createTexture("container.jpg");
+	GLuint wallTexture = createTexture("wall.jpg");
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -164,7 +166,10 @@ int main() {
 		litShader.setVec3("_LightPos", lightTransform.position);
 		
 		//Draw cube
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, wallTexture);
 		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
+		litShader.setInt("ourTexture", 1);
 		cubeMesh.draw();
 
 		//Draw sphere
@@ -177,7 +182,7 @@ int main() {
 		
 		//Draw plane
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, conTexture);
 		planeTransform.rotation = glm::vec3(-99,0,0);
 		litShader.setMat4("_Model", planeTransform.getModelMatrix());
 		litShader.setInt("ourTexture", 0);
