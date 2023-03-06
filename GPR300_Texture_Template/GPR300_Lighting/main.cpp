@@ -54,7 +54,7 @@ const float CAMERA_ZOOM_SPEED = 3.0f;
 
 Camera camera((float)SCREEN_WIDTH / (float)SCREEN_HEIGHT);
 
-glm::vec3 bgColor = glm::vec3(0);
+glm::vec3 bgColor = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 lightColor = glm::vec3(1.0f);
 glm::vec3 lightPosition = glm::vec3(0.0f, 3.0f, 0.0f);
 
@@ -99,19 +99,19 @@ int main() {
 	//Used to draw light sphere
 	Shader unlitShader("shaders/defaultLit.vert", "shaders/unlit.frag");
 
-	//ew::MeshData cubeMeshData;
-	//ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
+	ew::MeshData cubeMeshData;
+	ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
 	ew::MeshData sphereMeshData;
 	ew::createSphere(0.5f, 64, sphereMeshData);
-	//ew::MeshData cylinderMeshData;
-	//ew::createCylinder(1.0f, 0.5f, 64, cylinderMeshData);
+	ew::MeshData cylinderMeshData;
+	ew::createCylinder(1.0f, 0.5f, 64, cylinderMeshData);
 	ew::MeshData planeMeshData;
 	ew::createPlane(1.0f, 1.0f, planeMeshData);
 
-	//ew::Mesh cubeMesh(&cubeMeshData);
+	ew::Mesh cubeMesh(&cubeMeshData);
 	ew::Mesh sphereMesh(&sphereMeshData);
 	ew::Mesh planeMesh(&planeMeshData);
-	//ew::Mesh cylinderMesh(&cylinderMeshData);
+	ew::Mesh cylinderMesh(&cylinderMeshData);
 
 	//Enable back face culling
 	glEnable(GL_CULL_FACE);
@@ -126,19 +126,19 @@ int main() {
 	glDepthFunc(GL_LESS);
 
 	//Initialize shape transforms
-	//ew::Transform cubeTransform;
-	//ew::Transform sphereTransform;
+	ew::Transform cubeTransform;
+	ew::Transform sphereTransform;
 	ew::Transform planeTransform;
-	//ew::Transform cylinderTransform;
+	ew::Transform cylinderTransform;
 	ew::Transform lightTransform;
 
-	//cubeTransform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
-	//sphereTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	cubeTransform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+	sphereTransform.position = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	planeTransform.position = glm::vec3(0.0f, -1.0f, 0.0f);
 	planeTransform.scale = glm::vec3(10.0f);
 
-	//cylinderTransform.position = glm::vec3(2.0f, 0.0f, 0.0f);
+	cylinderTransform.position = glm::vec3(2.0f, 0.0f, 0.0f);
 
 	lightTransform.scale = glm::vec3(0.5f);
 	lightTransform.position = glm::vec3(0.0f, 5.0f, 0.0f);
@@ -164,24 +164,22 @@ int main() {
 		litShader.setVec3("_LightPos", lightTransform.position);
 		
 		//Draw cube
-		//litShader.setMat4("_Model", cubeTransform.getModelMatrix());
-		//cubeMesh.draw();
+		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
+		cubeMesh.draw();
 
 		//Draw sphere
-		//litShader.setMat4("_Model", sphereTransform.getModelMatrix());
-		//sphereMesh.draw();
+		litShader.setMat4("_Model", sphereTransform.getModelMatrix());
+		sphereMesh.draw();
 
 		//Draw cylinder
-		//litShader.setMat4("_Model", cylinderTransform.getModelMatrix());
-		//cylinderMesh.draw();
+		litShader.setMat4("_Model", cylinderTransform.getModelMatrix());
+		cylinderMesh.draw();
 		
 		//Draw plane
-		
-
-		litShader.setMat4("_Model", planeTransform.getModelMatrix());
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		//set outTexture to createTexture("container.jpg"); ?
+		planeTransform.rotation = glm::vec3(-99,0,0);
+		litShader.setMat4("_Model", planeTransform.getModelMatrix());
 		litShader.setInt("ourTexture", 0);
 		planeMesh.draw();
 
@@ -195,7 +193,6 @@ int main() {
 
 		//Draw UI
 		ImGui::Begin("Settings");
-
 		ImGui::ColorEdit3("Light Color", &lightColor.r);
 		ImGui::DragFloat3("Light Position", &lightTransform.position.x);
 		ImGui::End();
@@ -225,7 +222,6 @@ GLuint createTexture(const char* filePath)
 	// load and generate the texture
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
-	std::cout << nrChannels << std::endl;
 	if (data)
 	{
 		printf("Worked Loaded");
