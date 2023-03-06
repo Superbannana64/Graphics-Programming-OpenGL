@@ -101,15 +101,15 @@ int main() {
 
 	//ew::MeshData cubeMeshData;
 	//ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
-	//ew::MeshData sphereMeshData;
-	//ew::createSphere(0.5f, 64, sphereMeshData);
+	ew::MeshData sphereMeshData;
+	ew::createSphere(0.5f, 64, sphereMeshData);
 	//ew::MeshData cylinderMeshData;
 	//ew::createCylinder(1.0f, 0.5f, 64, cylinderMeshData);
 	ew::MeshData planeMeshData;
 	ew::createPlane(1.0f, 1.0f, planeMeshData);
 
 	//ew::Mesh cubeMesh(&cubeMeshData);
-	//ew::Mesh sphereMesh(&sphereMeshData);
+	ew::Mesh sphereMesh(&sphereMeshData);
 	ew::Mesh planeMesh(&planeMeshData);
 	//ew::Mesh cylinderMesh(&cylinderMeshData);
 
@@ -142,6 +142,7 @@ int main() {
 
 	lightTransform.scale = glm::vec3(0.5f);
 	lightTransform.position = glm::vec3(0.0f, 5.0f, 0.0f);
+	GLuint texture = createTexture("container.jpg");
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -173,10 +174,15 @@ int main() {
 		//Draw cylinder
 		//litShader.setMat4("_Model", cylinderTransform.getModelMatrix());
 		//cylinderMesh.draw();
-
+		
 		//Draw plane
+		
+
 		litShader.setMat4("_Model", planeTransform.getModelMatrix());
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
 		//set outTexture to createTexture("container.jpg"); ?
+		litShader.setInt("ourTexture", 0);
 		planeMesh.draw();
 
 		//Draw light as a small sphere using unlit shader, ironically.
@@ -185,7 +191,7 @@ int main() {
 		unlitShader.setMat4("_View", camera.getViewMatrix());
 		unlitShader.setMat4("_Model", lightTransform.getModelMatrix());
 		unlitShader.setVec3("_Color", lightColor);
-		//sphereMesh.draw();
+		sphereMesh.draw();
 
 		//Draw UI
 		ImGui::Begin("Settings");
@@ -208,29 +214,29 @@ int main() {
 GLuint createTexture(const char* filePath)
 {
 	stbi_set_flip_vertically_on_load(1);
-	GLuint texture;
-	int width = 0, height = 0, bpp = 0;
-	unsigned char* image_data = stbi_load(filePath, &width, &height, &bpp, 0);
-
-	if (!image_data)
-	{
-		printf("Load Texture Failed. Attempt From '%s' - %s\n", filePath, stbi_failure_reason());
-	}
-	
+	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	stbi_image_free(image_data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load and generate the texture
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
+	std::cout << nrChannels << std::endl;
+	if (data)
+	{
+		printf("Worked Loaded");
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
 
 	return texture;
 }
