@@ -224,7 +224,7 @@ namespace ew {
 				halfHeight,
 				sin(i * thetaStep) * radius
 			);
-			glm::vec2 UV = glm::vec2(i*thetaStep, i*thetaStep);
+			glm::vec2 UV = glm::vec2(0.5f * cos(i) + 0.5f, 0.5f * sin(i) + 0.5f);
 			meshData.vertices.push_back(Vertex(pos, glm::vec3(0, 1, 0), UV));
 		}
 
@@ -239,7 +239,7 @@ namespace ew {
 				sin(i * thetaStep) * radius
 
 			);
-			glm::vec2 UV = glm::vec2(i * thetaStep, thetaStep);
+			glm::vec2 UV = glm::vec2(0.5f * cos(i) + 0.5f, 0.5f * sin(i) + 0.5f);
 			meshData.vertices.push_back(Vertex(pos, glm::vec3(0, -1, 0), UV));
 		}
 
@@ -250,7 +250,7 @@ namespace ew {
 		{
 			glm::vec3 pos = meshData.vertices[i + 1].position;
 			glm::vec3 normal = glm::normalize((pos - meshData.vertices[0].position));
-			glm::vec2 UV = meshData.vertices[i + 1].UV;
+			glm::vec2 UV = glm::vec2(i / glm::pi<float>(), 1);
 			meshData.vertices.push_back(Vertex(pos, normal, UV));
 		}
 		//Side bottom ring
@@ -258,7 +258,7 @@ namespace ew {
 		{
 			glm::vec3 pos = meshData.vertices[bottomCenterIndex + i + 1].position;
 			glm::vec3 normal = glm::normalize((pos - meshData.vertices[bottomCenterIndex].position));
-			glm::vec2 UV = meshData.vertices[i + 1].UV;
+			glm::vec2 UV = glm::vec2(i / glm::pi<float>(), 0);
 			meshData.vertices.push_back(Vertex(pos, normal, UV));
 		}
 
