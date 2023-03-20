@@ -154,7 +154,8 @@ int main() {
 	lightTransform.scale = glm::vec3(0.5f);
 	lightTransform.position = glm::vec3(0.0f, 5.0f, 0.0f);
 
-	GLuint conTexture = createTexture("container.jpg");
+	GLuint conTexture = createTexture("PavingStonesColor.png");
+	GLuint conTextureGL = createTexture("PavingStonesNormGL.png");
 	GLuint wallTexture = createTexture("wall.jpg");
 
 	while (!glfwWindowShouldClose(window)) {
@@ -215,6 +216,7 @@ int main() {
 		planeTransform.rotation = glm::vec3(-99,0,0);
 		litShader.setMat4("_Model", planeTransform.getModelMatrix());
 		litShader.setInt("ourTexture", 0);
+		litShader.setInt("ourNormTexture", 2);
 		planeMesh.draw();
 
 		//Draw light as a small sphere using unlit shader, ironically.
@@ -266,6 +268,7 @@ GLuint createTexture(const char* filePath)
 	if (data)
 	{
 		printf("Worked Loaded \n");
+		std::cout << "nrChannel: " << nrChannels << std::endl;
 		switch (nrChannels)
 		{
 		case 0:

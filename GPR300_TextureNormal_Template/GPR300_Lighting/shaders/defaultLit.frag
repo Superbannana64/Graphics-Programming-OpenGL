@@ -27,12 +27,14 @@ struct PointLight {
 in vec3 Normal;
 in vec2 TexCoord1;
 in vec3 FragPos;
+in mat3 TBN;
 
 uniform vec3 _LightPos;
 uniform vec3 _ViewPos;
 uniform Material material;
 
 uniform sampler2D ourTexture;
+uniform sampler2D ourNormTexture;
 
 uniform PointLight pLight;
 
@@ -41,8 +43,11 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 void main(){         
     
 
-    vec3 Norm = texture(ourTexture, TexCoord1).rgb;
-    Norm = normalize(Normal*2.0 - 1.0);
+    vec3 Norm = texture(ourNormTexture, TexCoord1).rgb;
+    Norm = normalize(Norm*2.0 - 1.0);
+
+    Norm = normalize(TBN * Norm);
+
     vec3 viewDir = normalize(_ViewPos - FragPos);
     vec3 result;
     result += CalcPointLight(pLight, Norm,FragPos, viewDir);

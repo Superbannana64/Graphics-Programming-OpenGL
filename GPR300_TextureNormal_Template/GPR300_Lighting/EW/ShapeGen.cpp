@@ -23,6 +23,11 @@ namespace ew {
 			0, 3, 2
 		};
 		meshData.indices.assign(&indices[0], &indices[6]);
+
+		for (int i = 0; i < 4; i++)
+		{
+			vertices[i].tangent = glm::cross(vertices[i].normal, glm::vec3(0, 0, 1));
+		}
 	};
 
 	void createQuad(float width, float height, MeshData& meshData) {
@@ -44,6 +49,11 @@ namespace ew {
 			0, 2, 3
 		};
 		meshData.indices.assign(&indices[0], &indices[6]);
+
+		for (int i = 0; i < 4; i++)
+		{
+			vertices[i].tangent = glm::cross(vertices[i].normal, glm::vec3(0, 0, 1));
+		}
 	};
 
 	void createCube(float width, float height, float depth, MeshData& meshData)
@@ -125,6 +135,11 @@ namespace ew {
 			22, 23, 20
 		};
 		meshData.indices.assign(&indices[0], &indices[36]);
+
+		for (int i = 0; i < 24; i++)
+		{
+			vertices[i].tangent = glm::cross(vertices[i].normal, glm::vec3(0, 0, 1));
+		}
 	}
 
 	void createSphere(float radius, int numSegments, MeshData& meshData)
@@ -158,12 +173,13 @@ namespace ew {
 				glm::vec3 position = glm::vec3(x, y, z);
 				glm::vec3 normal = glm::normalize(glm::vec3(x, y, z));
 				glm::vec2 UV = glm::vec2(j*thetaStep, 1.0f - (i+1.0f)*phiStep);
+				glm::vec3 tangent = glm::cross(normal, glm::vec3(0, 0, 1));
 
 				meshData.vertices.push_back({ position, normal, UV });
 			}
 		}
 
-		meshData.vertices.push_back({ glm::vec3(0,bottomY,0), glm::vec3(0,-1,0), glm::vec2(0,0) });
+		meshData.vertices.push_back({ glm::vec3(0,bottomY,0), glm::vec3(0,-1,0), glm::vec2(0,0)});
 		unsigned int bottomIndex = (unsigned int)meshData.vertices.size() - 1;
 		unsigned int ringVertexCount = numSegments + 1;
 
