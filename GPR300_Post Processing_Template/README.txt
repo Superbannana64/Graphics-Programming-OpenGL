@@ -1,0 +1,1 @@
+I used the attenuation method GL falloff. My reasoning for using GL falloff was that I understood its formula more than I understood Fixed min exponential falloff, and Clamped linear falloff, or UE windowed. 
