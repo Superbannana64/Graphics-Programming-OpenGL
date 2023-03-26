@@ -99,6 +99,30 @@ int main() {
 	//Used to draw light sphere
 	Shader unlitShader("shaders/defaultLit.vert", "shaders/unlit.frag");
 
+	//Another shader for screen
+	Shader screenShader("shaders/screenLit.vert","shaders/screenLit.frag");
+
+	float quadVertices[] = {
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+	unsigned int quadVAO, quadVBO;
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
 	ew::MeshData cubeMeshData;
 	ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
 	ew::MeshData sphereMeshData;
@@ -146,6 +170,9 @@ int main() {
 	GLuint conTexture = createTexture("container.jpg");
 	GLuint wallTexture = createTexture("wall.jpg");
 
+	screenShader.use();
+	screenShader.setInt("screenTexture", 0);
+
 	//create custom FBO
 	unsigned int fbo;
 	glGenFramebuffers(1, &fbo);
@@ -174,8 +201,8 @@ int main() {
 		processInput(window);
 
 		//bind new frame buffer
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glEnable(GL_DEPTH_TEST);
+		//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		//glEnable(GL_DEPTH_TEST);
 
 		glClearColor(bgColor.r,bgColor.g,bgColor.b, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -194,6 +221,13 @@ int main() {
 		//Draw Quad using post processing shader sampling from the FBO color attachment texture
 		//GUI
 		//Done
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+
+		// make sure we clear the framebuffer's content
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//Draw
 		litShader.use();
@@ -234,17 +268,17 @@ int main() {
 
 		//bind to default
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST);
-
-		//clear buffers
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+		// clear all relevant buffers
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//Draw Quad using post processing shader sampling from the FBO color attachment texture
 		//aka a quad that glBindTexture(GL_TEXTURE_2D, textureColorbuffer); is done inside it
-		//create my own?
-		//litShader.use();
-		//glBindVertexArray
+		screenShader.use();
+		glBindVertexArray(quadVAO);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		//Draw UI
 		ImGui::Begin("Settings");
@@ -260,6 +294,8 @@ int main() {
 	}
 
 	//Delete buffers
+	glDeleteVertexArrays(1, &quadVAO);
+	glDeleteBuffers(1, &quadVBO);
 
 	glfwTerminate();
 	return 0;
