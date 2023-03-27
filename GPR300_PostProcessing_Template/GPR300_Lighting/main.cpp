@@ -58,6 +58,16 @@ glm::vec3 bgColor = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 lightColor = glm::vec3(1.0f);
 glm::vec3 lightPosition = glm::vec3(0.0f, 3.0f, 0.0f);
 
+glm::vec3 dLightColor = glm::vec3(1.0f);
+glm::vec3 dLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+float dLightIntensity = 1;
+
+glm::vec3 objectColor = glm::vec3(1.0f);
+float matAmbient = 1.0f;
+float matDiffuse = 1.0f;
+float matSpecular = 1.0f;
+float matShiny = 32.0f;
+
 bool wireFrame = false;
 
 int main() {
@@ -102,6 +112,8 @@ int main() {
 	//Another shader for screen
 	Shader screenShader("shaders/screenLit.vert","shaders/screenLit.frag");
 
+
+	//All Below is the quad for the post processing
 	float quadVertices[] = {
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,
@@ -111,7 +123,6 @@ int main() {
 		 1.0f, -1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f,  1.0f, 1.0f
 	};
-
 	unsigned int quadVAO, quadVBO;
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1, &quadVBO);
@@ -131,7 +142,6 @@ int main() {
 	ew::createCylinder(1.0f, 0.5f, 64, cylinderMeshData);
 	ew::MeshData planeMeshData;
 	ew::createPlane(1.0f, 1.0f, planeMeshData);
-
 	ew::Mesh cubeMesh(&cubeMeshData);
 	ew::Mesh sphereMesh(&sphereMeshData);
 	ew::Mesh planeMesh(&planeMeshData);
@@ -235,6 +245,19 @@ int main() {
 		litShader.setMat4("_View", camera.getViewMatrix());
 		litShader.setVec3("_LightPos", lightTransform.position);
 		
+		litShader.setVec3("material.objectColor", objectColor);
+		litShader.setFloat("material.ambient", matAmbient);
+		litShader.setFloat("material.diffuse", matDiffuse);
+		litShader.setFloat("material.specular", matSpecular);
+		litShader.setFloat("material.shininess", matShiny);
+
+		litShader.setVec3("dLight.direction", dLightPosition);
+		litShader.setVec3("dLight.lightColor", dLightColor);
+		litShader.setFloat("dLight.intensity", dLightIntensity);
+		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("dLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("dLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
 		//Draw cube
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, wallTexture);
@@ -284,6 +307,12 @@ int main() {
 		ImGui::Begin("Settings");
 		ImGui::ColorEdit3("Light Color", &lightColor.r);
 		ImGui::DragFloat3("Light Position", &lightTransform.position.x);
+		ImGui::End();
+
+		ImGui::Begin("Directional Light Settings");
+		ImGui::ColorEdit3("Light Color", &dLightColor.r);
+		ImGui::DragFloat3("Light Direction", (float*)&dLightPosition);
+		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
 		ImGui::End();
 
 		ImGui::Render();
