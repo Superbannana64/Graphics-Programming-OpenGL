@@ -69,6 +69,7 @@ float matSpecular = 1.0f;
 float matShiny = 32.0f;
 
 bool wireFrame = false;
+bool invBool = false;
 
 int main() {
 	if (!glfwInit()) {
@@ -299,6 +300,7 @@ int main() {
 		//Draw Quad using post processing shader sampling from the FBO color attachment texture
 		//aka a quad that glBindTexture(GL_TEXTURE_2D, textureColorbuffer); is done inside it
 		screenShader.use();
+		screenShader.setInt("invCol", invBool);
 		glBindVertexArray(quadVAO);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -307,6 +309,7 @@ int main() {
 		ImGui::Begin("Settings");
 		ImGui::ColorEdit3("Light Color", &lightColor.r);
 		ImGui::DragFloat3("Light Position", &lightTransform.position.x);
+		ImGui::Checkbox("Inverse", &invBool);
 		ImGui::End();
 
 		ImGui::Begin("Directional Light Settings");
