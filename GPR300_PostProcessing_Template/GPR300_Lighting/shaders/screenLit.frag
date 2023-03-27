@@ -10,7 +10,7 @@ void main()
 {
     if(invCol)
     {
-        //Inverse Colors For Testing
+        //Inverse Colors
         FragColor = vec4(vec3(1.0 - texture(screenTexture, TexCoords)), 1.0);
     }
     else
@@ -19,7 +19,7 @@ void main()
         FragColor = vec4(col, 1.0);
     }
 
-    //Gray Scale
+    //Gray Scale Testing
     //FragColor = texture(screenTexture, TexCoords);
     //float avg = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
     //FragColor = vec4(avg, avg, avg, 1.0);
