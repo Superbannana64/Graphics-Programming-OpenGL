@@ -1,0 +1,2 @@
+C:/Users/PC/Documents/GitHub/Graphics-Programming-OpenGL/GPR300_Lighting_Template/vendor/glm/include/glm/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+C:/Users/PC/Documents/GitHub/Graphics-Programming-OpenGL/GPR300_Lighting_Template/vendor/glm/include/glm/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
