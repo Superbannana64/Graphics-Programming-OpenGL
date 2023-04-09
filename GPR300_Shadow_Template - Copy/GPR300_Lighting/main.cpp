@@ -56,26 +56,6 @@ glm::vec3 dLightColor = glm::vec3(1.0f);
 glm::vec3 dLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
 float dLightIntensity = 1;
 
-//Point
-glm::vec3 pLightColor = glm::vec3(1.0f);
-glm::vec3 pLightPosition = glm::vec3(-2.2f, 2.0f, 0.3f);
-float pLightIntensity = 1;
-float pLightLinear = 0.09f;
-
-glm::vec3 pLightColor2 = glm::vec3(1.0f);
-glm::vec3 pLightPosition2 = glm::vec3(-2.2f, 2.0f, -0.3f);
-float pLightIntensity2 = 1;
-float pLightLinear2 = 0.09f;
-
-//Spot
-glm::vec3 sLightColor = glm::vec3(1.0f);
-glm::vec3 sLightPosition = glm::vec3(2.2f, 2.0f, -0.3f);
-glm::vec3 sLightDirection = glm::vec3(-0.2f, -1.0f, -0.3f);
-float sLightIntensity = 1;
-float sLightLinear = 0.09f;
-float sCutOff = 12.7f;
-float sOutCutOff = 17.5f;
-
 //Materials
 glm::vec3 objectColor = glm::vec3(1.0f);
 float matAmbient = 1.0f;
@@ -84,6 +64,11 @@ float matSpecular = 1.0f;
 float matShiny = 32.0f;
 
 bool wireFrame = false;
+
+unsigned int planeVAO;
+
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
 
 int main() {
 	if (!glfwInit()) {
@@ -117,11 +102,40 @@ int main() {
 	//Dark UI theme.
 	ImGui::StyleColorsDark();
 
+	//Shaders for shadow mapping
+	Shader simpleDepth("shaders/simpleDepth.vert", "shaders/simpleDepth.frag");
+	Shader debugQuad("shaders/debugQuad.vert", "shaders/debugQuad.frag");
+
 	//Used to draw shapes. This is the shader you will be completing.
 	Shader litShader("shaders/defaultLit.vert", "shaders/defaultLit.frag");
-
-	//Used to draw light sphere
 	Shader unlitShader("shaders/defaultLit.vert", "shaders/unlit.frag");
+
+	//plane vertex
+	float planeVertices[] = {
+		// positions            // normals         // texcoords
+		 25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+
+		 25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+		 25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
+	};
+
+	//plane VAO
+	unsigned int planeVBO;
+	glGenVertexArrays(1, &planeVAO);
+	glGenBuffers(1, &planeVBO);
+	glBindVertexArray(planeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), planeVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glBindVertexArray(0);
 
 	ew::MeshData cubeMeshData;
 	ew::createCube(1.0f, 1.0f, 1.0f, cubeMeshData);
@@ -167,6 +181,30 @@ int main() {
 	lightTransform.scale = glm::vec3(0.5f);
 	lightTransform.position = glm::vec3(0.0f, 5.0f, 0.0f);
 
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	unsigned int depthMapFBO;
+	glGenFramebuffers(1, &depthMapFBO);
+	// create depth texture
+	unsigned int depthMap;
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// attach depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	debugQuad.use();
+	debugQuad.setInt("depthMap", 0);
+
+	glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
+
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		glClearColor(bgColor.r,bgColor.g,bgColor.b, 1.0f);
@@ -180,6 +218,69 @@ int main() {
 		deltaTime = time - lastFrameTime;
 		lastFrameTime = time;
 
+		glm::mat4 lightProjection, lightView;
+		glm::mat4 lightSpaceMatrix;
+		float near_plane = 1.0f, far_plane = 7.5f;
+		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		lightSpaceMatrix = lightProjection * lightView;
+		// render scene from light's point of view
+		simpleDepth.use();
+		simpleDepth.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//Draw cube
+		simpleDepth.setMat4("_Model", cubeTransform.getModelMatrix());
+		cubeMesh.draw();
+
+		//Draw sphere
+		simpleDepth.setMat4("_Model", sphereTransform.getModelMatrix());
+		sphereMesh.draw();
+
+		//Draw cylinder
+		simpleDepth.setMat4("_Model", cylinderTransform.getModelMatrix());
+		cylinderMesh.draw();
+
+		//Draw plane
+		simpleDepth.setMat4("_Model", planeTransform.getModelMatrix());
+		planeMesh.draw();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		debugQuad.use();
+		debugQuad.setFloat("near_plane", near_plane);
+		debugQuad.setFloat("far_plane", far_plane);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		if (quadVAO == 0)
+		{
+			float quadVertices[] = {
+				// positions        // texture Coords
+				-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+				-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+				 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+				 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+			};
+			// setup plane VAO
+			glGenVertexArrays(1, &quadVAO);
+			glGenBuffers(1, &quadVBO);
+			glBindVertexArray(quadVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		}
+		glBindVertexArray(quadVAO);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindVertexArray(0);
+
+		/*
 		//Draw
 		litShader.use();
 		litShader.setMat4("_Projection", camera.getProjectionMatrix());
@@ -190,21 +291,6 @@ int main() {
 		litShader.setVec3("dLight.direction", dLightPosition);
 		litShader.setVec3("dLight.lightColor", dLightColor);
 		litShader.setFloat("dLight.intensity", dLightIntensity);
-		//Point Light
-		litShader.setVec3("pLight[0].position", pLightPosition);
-		litShader.setVec3("pLight[0].lightColor", pLightColor);
-		litShader.setFloat("pLight[0].intensity", pLightIntensity);
-		litShader.setVec3("pLight[1].position", pLightPosition2);
-		litShader.setVec3("pLight[1].lightColor", pLightColor2);
-		litShader.setFloat("pLight[1].intensity", pLightIntensity2);
-		//Spot Light
-		litShader.setVec3("sLight.position", sLightPosition);
-		litShader.setVec3("sLight.direction", sLightDirection);
-		litShader.setVec3("sLight.lightColor", sLightColor);
-		litShader.setFloat("sLight.intensity", sLightIntensity);
-		litShader.setFloat("sLight.cutoff", glm::cos(glm::radians(sCutOff)));
-		litShader.setFloat("sLight.outerCutOff", glm::cos(glm::radians(sOutCutOff)));
-
 
 		//Materials Make them all ImGUI interfacable
 		litShader.setVec3("material.objectColor", objectColor);
@@ -217,26 +303,6 @@ int main() {
 		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
 		litShader.setVec3("dLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		litShader.setVec3("dLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		//Point Light
-		litShader.setVec3("pLight[0].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		litShader.setVec3("pLight[0].diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		litShader.setVec3("pLight[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		litShader.setFloat("pLight[0].constant", 1.0f);
-		litShader.setFloat("pLight[0].linear", pLightLinear);
-		litShader.setFloat("pLight[0].quadratic", 0.032f);
-		litShader.setVec3("pLight[1].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		litShader.setVec3("pLight[1].diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		litShader.setVec3("pLight[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		litShader.setFloat("pLight[1].constant", 1.0f);
-		litShader.setFloat("pLight[1].linear", pLightLinear2);
-		litShader.setFloat("pLight[1].quadratic", 0.032f);
-		//Spot Light
-		litShader.setVec3("sLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		litShader.setVec3("sLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		litShader.setVec3("sLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		litShader.setFloat("sLight.constant", 1.0f);
-		litShader.setFloat("sLight.linear", sLightLinear);
-		litShader.setFloat("sLight.quadratic", 0.032f);
 
 
 		//Draw cube
@@ -261,7 +327,7 @@ int main() {
 		unlitShader.setMat4("_View", camera.getViewMatrix());
 		unlitShader.setMat4("_Model", lightTransform.getModelMatrix());
 		unlitShader.setVec3("_Color", dLightColor);
-		sphereMesh.draw();
+		sphereMesh.draw();*/
 
 		//Draw UI
 		ImGui::Begin("Directional Light Settings");
@@ -269,28 +335,6 @@ int main() {
 		ImGui::ColorEdit3("Light Color", &dLightColor.r);
 		ImGui::DragFloat3("Light Direction", (float*)&dLightPosition);
 		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
-		ImGui::End();
-
-		ImGui::Begin("Point Light Settings");
-		ImGui::ColorEdit3("Light Color", &pLightColor.r);
-		ImGui::DragFloat3("Light Direction", (float*)&pLightPosition);
-		ImGui::DragFloat("Intensity", &pLightIntensity, 0.1f, 0.0f, 5.0f);
-		ImGui::DragFloat("Linear Atten", &pLightLinear, 0.01f, 0.01f, 0.7f);
-
-		ImGui::ColorEdit3("Light Color 2", &pLightColor2.r);
-		ImGui::DragFloat3("Light Direction 2", (float*)&pLightPosition2);
-		ImGui::DragFloat("Intensity 2", &pLightIntensity2, 0.1f, 0.0f, 5.0f);
-		ImGui::DragFloat("Linear Atten 2", &pLightLinear2, 0.01f, 0.01f, 0.7f);
-		ImGui::End();
-
-		ImGui::Begin("Spot Light Settings");
-		ImGui::ColorEdit3("Light Color", &sLightColor.r);
-		ImGui::DragFloat3("Light Position", (float*)&sLightPosition);
-		ImGui::DragFloat3("Light Direction", (float*)&sLightDirection);
-		ImGui::DragFloat("Intensity", &sLightIntensity, 0.1f, 0.0f, 5.0f);
-		ImGui::DragFloat("Linear Atten", &sLightLinear, 0.01f, 0.01f, 0.7f);
-		ImGui::DragFloat("Min Cutoff", &sCutOff, 1.0f, 0.0f, 359.0f);
-		ImGui::DragFloat("Max Cutoff", &sOutCutOff, 1.0f, 1.0f, 360.0f);
 		ImGui::End();
 
 		//Material Settings
@@ -304,10 +348,12 @@ int main() {
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		glfwPollEvents();
 
+		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
+	glDeleteVertexArrays(1, &planeVAO);
+	glDeleteBuffers(1, &planeVBO);
 
 	glfwTerminate();
 	return 0;
