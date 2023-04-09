@@ -20,11 +20,48 @@ struct DirectionalLight {
     float intensity;
 };
 
+struct PointLight {
+    vec3 position;  
+    vec3 lightColor;
+  
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float intensity;
+
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+struct SpotLight{
+    vec3  position;
+    vec3  direction;
+    vec3 lightColor;
+    float cutOff;
+    float outerCutOff;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    float intensity;
+
+};
+
 uniform vec3 _LightPos;
 uniform vec3 _ViewPos;
 uniform Material material;
 
 uniform DirectionalLight dLight;  
+#define POINT_LIGHTS 2  
+uniform PointLight pLight[2];
+uniform SpotLight sLight;
 
 in vec3 Normal;
 in vec3 FragPos;
@@ -40,6 +77,10 @@ void main(){
     vec3 result;
 
     result += CalcDirLight(dLight, Norm, viewDir);
+    result += CalcPointLight(pLight[0], Norm,FragPos, viewDir);
+    result += CalcPointLight(pLight[1], Norm,FragPos, viewDir);
+
+    result += CalcSpotLight(sLight, Norm, FragPos, viewDir);
 
     FragColor = vec4(result,1.0f);
 }

@@ -190,6 +190,21 @@ int main() {
 		litShader.setVec3("dLight.direction", dLightPosition);
 		litShader.setVec3("dLight.lightColor", dLightColor);
 		litShader.setFloat("dLight.intensity", dLightIntensity);
+		//Point Light
+		litShader.setVec3("pLight[0].position", pLightPosition);
+		litShader.setVec3("pLight[0].lightColor", pLightColor);
+		litShader.setFloat("pLight[0].intensity", pLightIntensity);
+		litShader.setVec3("pLight[1].position", pLightPosition2);
+		litShader.setVec3("pLight[1].lightColor", pLightColor2);
+		litShader.setFloat("pLight[1].intensity", pLightIntensity2);
+		//Spot Light
+		litShader.setVec3("sLight.position", sLightPosition);
+		litShader.setVec3("sLight.direction", sLightDirection);
+		litShader.setVec3("sLight.lightColor", sLightColor);
+		litShader.setFloat("sLight.intensity", sLightIntensity);
+		litShader.setFloat("sLight.cutoff", glm::cos(glm::radians(sCutOff)));
+		litShader.setFloat("sLight.outerCutOff", glm::cos(glm::radians(sOutCutOff)));
+
 
 		//Materials Make them all ImGUI interfacable
 		litShader.setVec3("material.objectColor", objectColor);
@@ -202,7 +217,28 @@ int main() {
 		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
 		litShader.setVec3("dLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		litShader.setVec3("dLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		
+		//Point Light
+		litShader.setVec3("pLight[0].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("pLight[0].diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("pLight[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setFloat("pLight[0].constant", 1.0f);
+		litShader.setFloat("pLight[0].linear", pLightLinear);
+		litShader.setFloat("pLight[0].quadratic", 0.032f);
+		litShader.setVec3("pLight[1].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("pLight[1].diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("pLight[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setFloat("pLight[1].constant", 1.0f);
+		litShader.setFloat("pLight[1].linear", pLightLinear2);
+		litShader.setFloat("pLight[1].quadratic", 0.032f);
+		//Spot Light
+		litShader.setVec3("sLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		litShader.setVec3("sLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+		litShader.setVec3("sLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		litShader.setFloat("sLight.constant", 1.0f);
+		litShader.setFloat("sLight.linear", sLightLinear);
+		litShader.setFloat("sLight.quadratic", 0.032f);
+
+
 		//Draw cube
 		litShader.setMat4("_Model", cubeTransform.getModelMatrix());
 		cubeMesh.draw();
@@ -233,6 +269,28 @@ int main() {
 		ImGui::ColorEdit3("Light Color", &dLightColor.r);
 		ImGui::DragFloat3("Light Direction", (float*)&dLightPosition);
 		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
+		ImGui::End();
+
+		ImGui::Begin("Point Light Settings");
+		ImGui::ColorEdit3("Light Color", &pLightColor.r);
+		ImGui::DragFloat3("Light Direction", (float*)&pLightPosition);
+		ImGui::DragFloat("Intensity", &pLightIntensity, 0.1f, 0.0f, 5.0f);
+		ImGui::DragFloat("Linear Atten", &pLightLinear, 0.01f, 0.01f, 0.7f);
+
+		ImGui::ColorEdit3("Light Color 2", &pLightColor2.r);
+		ImGui::DragFloat3("Light Direction 2", (float*)&pLightPosition2);
+		ImGui::DragFloat("Intensity 2", &pLightIntensity2, 0.1f, 0.0f, 5.0f);
+		ImGui::DragFloat("Linear Atten 2", &pLightLinear2, 0.01f, 0.01f, 0.7f);
+		ImGui::End();
+
+		ImGui::Begin("Spot Light Settings");
+		ImGui::ColorEdit3("Light Color", &sLightColor.r);
+		ImGui::DragFloat3("Light Position", (float*)&sLightPosition);
+		ImGui::DragFloat3("Light Direction", (float*)&sLightDirection);
+		ImGui::DragFloat("Intensity", &sLightIntensity, 0.1f, 0.0f, 5.0f);
+		ImGui::DragFloat("Linear Atten", &sLightLinear, 0.01f, 0.01f, 0.7f);
+		ImGui::DragFloat("Min Cutoff", &sCutOff, 1.0f, 0.0f, 359.0f);
+		ImGui::DragFloat("Max Cutoff", &sOutCutOff, 1.0f, 1.0f, 360.0f);
 		ImGui::End();
 
 		//Material Settings
