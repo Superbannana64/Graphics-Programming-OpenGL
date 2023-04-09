@@ -99,10 +99,4 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\debugQuad.frag" />
-    <None Include="shaders\debugQuad.vert" />
-    <None Include="shaders\simpleDepth.frag" />
-    <None Include="shaders\simpleDepth.vert" />
-  </ItemGroup>
 </Project>
