@@ -252,7 +252,7 @@ int main() {
 		litShader.setFloat("material.specular", matSpecular);
 		litShader.setFloat("material.shininess", matShiny);
 
-		litShader.setVec3("dLight.direction", dLightPosition);
+		litShader.setVec3("dLight.direction", -dLightPosition);
 		litShader.setVec3("dLight.lightColor", dLightColor);
 		litShader.setFloat("dLight.intensity", dLightIntensity);
 		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
