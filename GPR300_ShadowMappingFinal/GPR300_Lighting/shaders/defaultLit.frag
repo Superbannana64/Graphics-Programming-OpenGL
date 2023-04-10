@@ -25,6 +25,8 @@ uniform vec3 _ViewPos;
 uniform Material material;
 uniform DirectionalLight dLight; 
 uniform sampler2D shadowMap;
+uniform float minBias;
+uniform float maxBias;
 
 in vec3 Normal;
 in vec3 FragPos;
@@ -57,7 +59,7 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec3 fragPo
     vec3 specular = light.lightColor*light.specular * (spec * material.specular);
     
     //min and max bias values (0.05 and 0.005 need to be in gui)
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float bias = max(maxBias * (1.0 - dot(normal, lightDir)), minBias);
 
     float shadow = ShadowCalculation(FragPosLightSpace, bias);
 

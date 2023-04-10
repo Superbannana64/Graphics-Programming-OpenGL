@@ -58,6 +58,9 @@ glm::vec3 dLightColor = glm::vec3(1.0f);
 glm::vec3 dLightPosition = glm::vec3(-0.2f, 5.0f, -0.3f);
 float dLightIntensity = 1;
 
+float minBias = 0.005;
+float maxBias = 0.05;
+
 //Materials
 glm::vec3 objectColor = glm::vec3(1.0f);
 float matAmbient = 1.0f;
@@ -217,7 +220,7 @@ int main() {
 		//getting lightViewProjection
 		float near_plane = 1.0f, far_plane = 7.5f;
 		glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-		glm::mat4 lightView = glm::lookAt(dLightPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); //Might Be Problem later
+		glm::mat4 lightView = glm::lookAt(dLightPosition, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); //Might Be Problem later
 		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -252,6 +255,8 @@ int main() {
 		litShader.setVec3("_ViewPos", camera.getPosition());
 		litShader.setVec3("_LightPos", dLightPosition);
 		litShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+		litShader.setFloat("minBias", minBias);
+		litShader.setFloat("maxBias", maxBias);
 
 		//Directional Light
 		litShader.setVec3("dLight.direction", dLightPosition);
@@ -350,7 +355,7 @@ int main() {
 		ImGui::End();
 
 		//Material Settings
-		ImGui::Begin("Matterial Settings");
+		ImGui::Begin("Material Settings");
 		ImGui::ColorEdit3("Material Color", &objectColor.r);
 		ImGui::DragFloat("AmbientK", &matAmbient, 0.01f, 0.0f, 1.0f);
 		ImGui::DragFloat("DiffuseK", &matDiffuse, 0.01f, 0.0f, 1.0f);
@@ -359,6 +364,10 @@ int main() {
 		ImGui::End();
 
 		//Shader Settings
+		ImGui::Begin("Shader Settings");
+		ImGui::DragFloat("Min Bias", &minBias, 0.001f, 0.001f, 1);
+		ImGui::DragFloat("Man Bias", &maxBias, 0.001f, 0.001f, 1);
+		ImGui::End();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
