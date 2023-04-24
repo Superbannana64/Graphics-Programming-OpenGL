@@ -4,8 +4,8 @@ out vec4 FragColor;
 in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
-uniform float BlurResolution = 100;
-uniform float radius = 5;
+uniform float BlurResolution = 10;
+uniform float radius = .1;
 uniform vec2 dir = vec2(0);
 
 vec4 addSum(vec2 a_UV){
