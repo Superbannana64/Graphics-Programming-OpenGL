@@ -102,5 +102,6 @@
   <ItemGroup>
     <None Include="shaders\screenLit.frag" />
     <None Include="shaders\screenLit.vert" />
+    <None Include="shaders\blurLit.frag" />
   </ItemGroup>
 </Project>

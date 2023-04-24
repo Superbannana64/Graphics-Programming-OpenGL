@@ -69,7 +69,7 @@ float matSpecular = 1.0f;
 float matShiny = 32.0f;
 
 bool wireFrame = false;
-bool invBool = false;
+float test = 0;
 
 int main() {
 	if (!glfwInit()) {
@@ -112,6 +112,8 @@ int main() {
 
 	//Another shader for screen
 	Shader screenShader("shaders/screenLit.vert","shaders/screenLit.frag");
+
+	Shader blurShader("shaders/screenLit.vert","shaders/blurLit.frag");
 
 
 	//All Below is the quad for the post processing
@@ -184,10 +186,16 @@ int main() {
 	screenShader.use();
 	screenShader.setInt("screenTexture", 0);
 
-	//create custom FBO
-	unsigned int fbo;
+	//create custom FBO for normal texture
+	unsigned int fbo, fboBlur;
+	unsigned int rbo, rboBlur;
+
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	//textureNormalBuffer
+	//textureBlur
+	//textureDepthbuffer
 
 	unsigned int textureColorbuffer;
 	glGenTextures(1, &textureColorbuffer);
@@ -197,7 +205,7 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 	// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-	unsigned int rbo;
+
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT); // use a single renderbuffer object for both a depth AND stencil buffer.
@@ -206,14 +214,32 @@ int main() {
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+
+	glGenFramebuffers(1, &fboBlur);
+	glBindFramebuffer(GL_FRAMEBUFFER, fboBlur);
+	//textureBlur
+
+	unsigned int textureColorBlurbuffer;
+	glGenTextures(1, &textureColorBlurbuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorBlurbuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBlurbuffer, 0);
+	// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
+
+	glGenRenderbuffers(1, &rboBlur);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboBlur);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT); // use a single renderbuffer object for both a depth AND stencil buffer.
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
-
-		//bind new frame buffer
-		//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		//glEnable(GL_DEPTH_TEST);
 
 		glClearColor(bgColor.r,bgColor.g,bgColor.b, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,17 +252,22 @@ int main() {
 		deltaTime = time - lastFrameTime;
 		lastFrameTime = time;
 
-		//bind FBO
-		//Draw scene
-		//Unbind
-		//Draw Quad using post processing shader sampling from the FBO color attachment texture
-		//GUI
-		//Done
+		//New Process. 
+		//We need 3 textures. A normal texture. a blured texture, and a depth texture
+		//Draw scene as normal, draw scene as blured, draw scene depth
+		//Step 1 is render the scene in litshader, get as texture (DONE)
+		//Step 2, render scene again using a blur shader, get as texture 
+		//Step 3, render scene AGAIN, this time as a base depth shader, get as texture
+		//With normal, blur, and depth textures, use dof shader, set uniforms etc, render screen-space quad
+
+		//To simplify, get base screen as texture, get blured screen as texture, get depthscene as texture, use all 3 on the quad to get depth of field effect
+		//Can i simplify it all? maybe normal acts as depth as well? Id rather not render everything 3 times
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
 
 		// make sure we clear the framebuffer's content
+		// 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -289,6 +320,17 @@ int main() {
 		unlitShader.setMat4("_Model", lightTransform.getModelMatrix());
 		unlitShader.setVec3("_Color", lightColor);
 		sphereMesh.draw();
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, fboBlur);
+		glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+		// make sure we clear the framebuffer's content
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		blurShader.use();
+		glBindVertexArray(quadVAO);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		//bind to default
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -299,23 +341,26 @@ int main() {
 
 		//Draw Quad using post processing shader sampling from the FBO color attachment texture
 		//aka a quad that glBindTexture(GL_TEXTURE_2D, textureColorbuffer); is done inside it
+
 		screenShader.use();
-		screenShader.setInt("invCol", invBool);
-		glBindVertexArray(quadVAO);
-		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+		if (test == 0)
+		{
+			glBindTexture(GL_TEXTURE_2D, textureColorbuffer);// use the color attachment texture as the texture of the quad plane
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D, textureColorBlurbuffer);
+		}
+		//Bind other 2 textures later
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
 		//Draw UI
 		ImGui::Begin("Settings");
 		ImGui::ColorEdit3("Light Color", &lightColor.r);
-		ImGui::DragFloat3("Light Position", &lightTransform.position.x);
-		ImGui::Checkbox("Inverse", &invBool);
-		ImGui::End();
-
-		ImGui::Begin("Directional Light Settings");
-		ImGui::ColorEdit3("Light Color", &dLightColor.r);
-		ImGui::DragFloat3("Light Direction", (float*)&dLightPosition);
+		ImGui::DragFloat3("Light Position", (float*)&dLightPosition);
 		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
+		ImGui::DragFloat("Test", &test, 1.0f, 0.0f, 1.0f);
 		ImGui::End();
 
 		ImGui::Render();
@@ -328,6 +373,10 @@ int main() {
 	//Delete buffers
 	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteBuffers(1, &quadVBO);
+
+	glDeleteFramebuffers(1, &fboBlur);
+	glDeleteFramebuffers(1, &fbo);
+	
 
 	glfwTerminate();
 	return 0;

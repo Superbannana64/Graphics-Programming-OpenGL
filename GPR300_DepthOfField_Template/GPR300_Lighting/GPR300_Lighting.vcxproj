@@ -161,6 +161,7 @@
     <ClInclude Include="EW\Transform.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\blurLit.frag" />
     <None Include="shaders\screenLit.frag" />
     <None Include="shaders\screenLit.vert" />
   </ItemGroup>
