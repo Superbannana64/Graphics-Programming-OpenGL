@@ -349,7 +349,7 @@ int main() {
 		}
 		else
 		{
-			glBindTexture(GL_TEXTURE_2D, textureColorBlurbuffer);
+			glBindTexture(GL_TEXTURE_2D, textureColorBlurbuffer); //WORKS :D
 		}
 		//Bind other 2 textures later
 		glDrawArrays(GL_TRIANGLES, 0, 6);
