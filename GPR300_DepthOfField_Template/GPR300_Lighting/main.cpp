@@ -59,7 +59,7 @@ glm::vec3 lightColor = glm::vec3(1.0f);
 glm::vec3 lightPosition = glm::vec3(0.0f, 3.0f, 0.0f);
 
 glm::vec3 dLightColor = glm::vec3(1.0f);
-glm::vec3 dLightPosition = glm::vec3(-0.2f, -1.0f, -0.3f);
+glm::vec3 dLightPosition = glm::vec3(0.2f, 1.0f, 0.3f);
 float dLightIntensity = 1;
 
 glm::vec3 objectColor = glm::vec3(1.0f);
@@ -252,7 +252,7 @@ int main() {
 		litShader.setFloat("material.specular", matSpecular);
 		litShader.setFloat("material.shininess", matShiny);
 
-		litShader.setVec3("dLight.direction", -dLightPosition);
+		litShader.setVec3("dLight.direction", dLightPosition);
 		litShader.setVec3("dLight.lightColor", dLightColor);
 		litShader.setFloat("dLight.intensity", dLightIntensity);
 		litShader.setVec3("dLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
