@@ -5,9 +5,11 @@ in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
 
+//make gui
 uniform float Intensity = 4.0f;
 
-vec4 boxBlur() {
+vec4 boxBlur() 
+{
 	vec2 texel = Intensity / textureSize(screenTexture, 0).xy;
 	
     vec2 coord = clamp(TexCoords, texel, vec2(1,1) - (texel * 2));
@@ -26,6 +28,7 @@ vec4 boxBlur() {
 	return color / 9;
 }
 
-void main() {
+void main() 
+{
     FragColor = boxBlur();
 }

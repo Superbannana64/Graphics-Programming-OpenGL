@@ -68,6 +68,18 @@ float matDiffuse = 1.0f;
 float matSpecular = 1.0f;
 float matShiny = 32.0f;
 
+//Blur
+float blurIntensity = 4.0f;
+//DOF
+float focusDist = 5.0f;
+float farDOF = 1.0f;
+float nearDOF = 1.0f;
+float falloff = 15.0f;
+float nearPlane = 0.1f;
+float farPlane = 1000.0f;
+float minStrength = 0.05f;
+
+
 bool wireFrame = false;
 float test = 0;
 
@@ -197,13 +209,28 @@ int main() {
 	//textureBlur
 	//textureDepthbuffer
 
-	unsigned int textureColorbuffer;
+	//Attach depth
+	unsigned int textureColorbuffer, textureDepthbuffer;
 	glGenTextures(1, &textureColorbuffer);
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+
+	glGenTextures(1, &textureDepthbuffer);
+	glBindTexture(GL_TEXTURE_2D, textureDepthbuffer);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 768, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+
 	// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
 
 	glGenRenderbuffers(1, &rbo);
@@ -330,6 +357,7 @@ int main() {
 		blurShader.use();
 		glBindVertexArray(quadVAO);
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+		blurShader.setFloat("Intensity", blurIntensity);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		//bind to default
@@ -339,19 +367,30 @@ int main() {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//Draw Quad using post processing shader sampling from the FBO color attachment texture
-		//aka a quad that glBindTexture(GL_TEXTURE_2D, textureColorbuffer); is done inside it
-
+		//PPA
 		screenShader.use();
-		if (test == 0)
-		{
-			glBindTexture(GL_TEXTURE_2D, textureColorbuffer);// use the color attachment texture as the texture of the quad plane
-		}
-		else
-		{
-			glBindTexture(GL_TEXTURE_2D, textureColorBlurbuffer); //WORKS :D
-		}
-		//Bind other 2 textures later
+		glBindVertexArray(quadVAO);
+
+		//Having trouble getting 2 textures in 1 frag
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);// use the color attachment texture as the texture of the quad plane
+		screenShader.setInt("screenTexture", 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textureColorBlurbuffer);
+		screenShader.setInt("blurTexture", 1);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE2, textureDepthbuffer);
+		screenShader.setInt("depthTexture", 2);
+
+		screenShader.setFloat("test", test);
+		screenShader.setFloat("focusDistance", focusDist);
+		screenShader.setFloat("farDof", farDOF);
+		screenShader.setFloat("nearDof", nearDOF);
+		screenShader.setFloat("falloff", falloff);
+		screenShader.setFloat("nearPlane", nearPlane);
+		screenShader.setFloat("farPlane", farPlane);
+		screenShader.setFloat("minStrength", minStrength);
+
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 
@@ -361,6 +400,17 @@ int main() {
 		ImGui::DragFloat3("Light Position", (float*)&dLightPosition);
 		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
 		ImGui::DragFloat("Test", &test, 1.0f, 0.0f, 1.0f);
+		ImGui::End();
+
+		ImGui::Begin("Depth Of Field");
+		ImGui::DragFloat("Intensity", &blurIntensity, 0.1f, 0.0f, 10.0f);
+		ImGui::DragFloat("Focus Distance",&focusDist, 1.0f, 1.0f, 50.0f);
+		ImGui::DragFloat("Far DOF", &farDOF, 0.1f, 0.0f, 10.0f);
+		ImGui::DragFloat("Near DOF", &nearDOF, 0.1f, 0.0f, 10.0f);
+		ImGui::DragFloat("Falloff", &falloff, 1.0f, 0.0f, 100.0f);
+		ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.0f, farPlane-0.1f);
+		ImGui::DragFloat("Far Plane", &farPlane, 0.01f, nearPlane+0.1f, 1000.0f);
+		ImGui::DragFloat("Min Strength", &minStrength, 0.01f, 0.0f, 10.0f);
 		ImGui::End();
 
 		ImGui::Render();
