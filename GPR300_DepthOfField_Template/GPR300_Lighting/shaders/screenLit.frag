@@ -53,7 +53,6 @@ void main()
     if(test == 1)
     {
         float dofStrength = depthStrength();
-    
         vec3 texCol = mix(texture2D(screenTexture, TexCoords),texture2D(blurTexture, TexCoords),1-dofStrength).rgb;
         FragColor = vec4(texCol,1);
     }

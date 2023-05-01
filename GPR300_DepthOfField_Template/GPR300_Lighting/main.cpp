@@ -73,7 +73,7 @@ float blurIntensity = 4.0f;
 //DOF
 float focusDist = 5.0f;
 float farDOF = 1.0f;
-float nearDOF = 1.0f;
+float nearDOF = 0.9f;
 float falloff = 15.0f;
 float nearPlane = 0.1f;
 float farPlane = 1000.0f;
@@ -404,7 +404,7 @@ int main() {
 
 		ImGui::Begin("Depth Of Field");
 		ImGui::DragFloat("Intensity", &blurIntensity, 0.1f, 0.1f, 10.0f);
-		ImGui::DragFloat("Focus Distance",&focusDist, 1.0f, 1.0f, 50.0f);
+		//ImGui::DragFloat("Focus Distance",&focusDist, 1.0f, 1.0f, 50.0f);
 		ImGui::DragFloat("Far DOF", &farDOF, 0.1f, nearDOF+0.1f, 10.0f);
 		ImGui::DragFloat("Near DOF", &nearDOF, 0.1f, 0.0f, farDOF - 0.1f);
 		ImGui::DragFloat("Falloff", &falloff, 1.0f, 1.0f, 100.0f);
