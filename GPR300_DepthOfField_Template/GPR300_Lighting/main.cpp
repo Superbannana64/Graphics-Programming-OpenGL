@@ -69,7 +69,7 @@ float matSpecular = 1.0f;
 float matShiny = 32.0f;
 
 //Blur
-float blurIntensity = 4.0f;
+float blurIntensity = 2.0f;
 //DOF
 float focusDist = 5.0f;
 float farDOF = 1.0f;
@@ -77,7 +77,7 @@ float nearDOF = 0.9f;
 float falloff = 15.0f;
 float nearPlane = 0.1f;
 float farPlane = 1000.0f;
-float minStrength = 0.05f;
+float minStrength = 0.07f;
 
 
 bool wireFrame = false;
