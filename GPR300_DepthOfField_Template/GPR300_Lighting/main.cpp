@@ -221,7 +221,7 @@ int main() {
 	glGenTextures(1, &textureDepthbuffer);
 	glBindTexture(GL_TEXTURE_2D, textureDepthbuffer);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 768, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 1024, 768, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -382,13 +382,13 @@ int main() {
 		glBindTexture(GL_TEXTURE2, textureDepthbuffer);
 		screenShader.setInt("depthTexture", 2);
 
+		screenShader.setFloat("xs", SCREEN_HEIGHT);
+		screenShader.setFloat("ys", SCREEN_WIDTH);
 		screenShader.setFloat("test", test);
 		screenShader.setFloat("focusDistance", focusDist);
 		screenShader.setFloat("farDof", farDOF);
 		screenShader.setFloat("nearDof", nearDOF);
 		screenShader.setFloat("falloff", falloff);
-		screenShader.setFloat("nearPlane", nearPlane);
-		screenShader.setFloat("farPlane", farPlane);
 		screenShader.setFloat("minStrength", minStrength);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -399,18 +399,16 @@ int main() {
 		ImGui::ColorEdit3("Light Color", &lightColor.r);
 		ImGui::DragFloat3("Light Position", (float*)&dLightPosition);
 		ImGui::DragFloat("Intensity", &dLightIntensity, 0.1f, 0.0f, 5.0f);
-		ImGui::DragFloat("Test", &test, 1.0f, 0.0f, 1.0f);
+		ImGui::DragFloat("DOF (1 on, 0 off)", &test, 1.0f, 0.0f, 1.0f);
 		ImGui::End();
 
 		ImGui::Begin("Depth Of Field");
-		ImGui::DragFloat("Intensity", &blurIntensity, 0.1f, 0.0f, 10.0f);
+		ImGui::DragFloat("Intensity", &blurIntensity, 0.1f, 0.1f, 10.0f);
 		ImGui::DragFloat("Focus Distance",&focusDist, 1.0f, 1.0f, 50.0f);
-		ImGui::DragFloat("Far DOF", &farDOF, 0.1f, 0.0f, 10.0f);
-		ImGui::DragFloat("Near DOF", &nearDOF, 0.1f, 0.0f, 10.0f);
-		ImGui::DragFloat("Falloff", &falloff, 1.0f, 0.0f, 100.0f);
-		ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.0f, farPlane-0.1f);
-		ImGui::DragFloat("Far Plane", &farPlane, 0.01f, nearPlane+0.1f, 1000.0f);
-		ImGui::DragFloat("Min Strength", &minStrength, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("Far DOF", &farDOF, 0.1f, nearDOF+0.1f, 10.0f);
+		ImGui::DragFloat("Near DOF", &nearDOF, 0.1f, 0.0f, farDOF - 0.1f);
+		ImGui::DragFloat("Falloff", &falloff, 1.0f, 1.0f, 100.0f);
+		ImGui::DragFloat("Min Strength", &minStrength, 0.01f, 0.0f, 1.0f);
 		ImGui::End();
 
 		ImGui::Render();
